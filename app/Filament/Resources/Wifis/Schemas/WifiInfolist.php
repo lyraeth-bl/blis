@@ -49,7 +49,7 @@ class WifiInfolist
                         TextEntry::make('link')
                             ->label('Link Admin')
                             ->placeholder('-')
-                            ->url(fn($record) => $record->link)
+                            ->url(fn ($record) => $record->link)
                             ->openUrlInNewTab(),
                     ]),
 

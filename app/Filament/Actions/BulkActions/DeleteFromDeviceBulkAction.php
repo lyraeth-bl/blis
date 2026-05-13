@@ -32,8 +32,9 @@ class DeleteFromDeviceBulkAction
 
                 foreach ($data['device_ids'] as $deviceId) {
                     $device = FingerprintDevice::find($deviceId);
-                    if (!$device)
+                    if (! $device) {
                         continue;
+                    }
 
                     foreach ($records as $record) {
                         try {
@@ -46,21 +47,21 @@ class DeleteFromDeviceBulkAction
                                 $results['failed'][] = $record->name;
                             }
                         } catch (\Throwable $e) {
-                            $results['failed'][] = $record->name . ' (' . $e->getMessage() . ')';
+                            $results['failed'][] = $record->name.' ('.$e->getMessage().')';
                         }
                     }
                 }
 
-                if (!empty($results['success'])) {
+                if (! empty($results['success'])) {
                     Notification::make()
-                        ->title(count($results['success']) . ' data berhasil dihapus dari device')
+                        ->title(count($results['success']).' data berhasil dihapus dari device')
                         ->success()
                         ->send();
                 }
 
-                if (!empty($results['failed'])) {
+                if (! empty($results['failed'])) {
                     Notification::make()
-                        ->title(count($results['failed']) . ' data gagal: ' . implode(', ', $results['failed']))
+                        ->title(count($results['failed']).' data gagal: '.implode(', ', $results['failed']))
                         ->danger()
                         ->send();
                 }

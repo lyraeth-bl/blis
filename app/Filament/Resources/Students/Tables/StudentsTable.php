@@ -6,21 +6,16 @@ use App\Filament\Actions\BulkActions\DeleteFromDeviceBulkAction;
 use App\Filament\Actions\BulkActions\PushToDeviceBulkAction;
 use App\Filament\Exports\StudentExporter;
 use App\Filament\Imports\StudentImporter;
-use App\Models\FingerprintDevice;
-use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ImportAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Collection;
 
 class StudentsTable
 {
@@ -41,7 +36,7 @@ class StudentsTable
                 TextColumn::make('unit')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'SMAKT' => 'info',
                         'SMKKT' => 'warning',
                     }),

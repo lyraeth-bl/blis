@@ -28,6 +28,7 @@ class WifiResource extends Resource
     protected static ?string $navigationLabel = 'Wifi';
 
     protected static ?string $pluralModelLabel = 'Daftar Wifi';
+
     protected static UnitEnum|string|null $navigationGroup = 'Jaringan';
 
     protected static ?string $recordTitleAttribute = 'ssid';

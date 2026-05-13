@@ -14,7 +14,7 @@ class ListWifis extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->icon(Heroicon::PlusCircle)->label("Tambah wifi"),
+            CreateAction::make()->icon(Heroicon::PlusCircle)->label('Tambah wifi'),
         ];
     }
 }

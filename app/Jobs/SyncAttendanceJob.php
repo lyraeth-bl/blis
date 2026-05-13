@@ -13,6 +13,7 @@ class SyncAttendanceJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+
     public int $timeout = 60;
 
     /**
@@ -20,8 +21,7 @@ class SyncAttendanceJob implements ShouldQueue
      */
     public function __construct(
         public readonly int $deviceId
-    ) {
-    }
+    ) {}
 
     /**
      * Execute the job.
@@ -30,8 +30,9 @@ class SyncAttendanceJob implements ShouldQueue
     {
         $device = FingerprintDevice::find($this->deviceId);
 
-        if (!$device) {
+        if (! $device) {
             Log::warning('SyncAttendanceJob: device not found', ['device_id' => $this->deviceId]);
+
             return;
         }
 
