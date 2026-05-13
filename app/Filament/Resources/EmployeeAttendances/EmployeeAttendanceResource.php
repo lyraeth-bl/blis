@@ -50,11 +50,6 @@ class EmployeeAttendanceResource extends Resource
             ->where('attendable_type', Employee::class);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) static::getModel()::count();
-    }
-
     public static function form(Schema $schema): Schema
     {
         return EmployeeAttendanceForm::configure($schema);
