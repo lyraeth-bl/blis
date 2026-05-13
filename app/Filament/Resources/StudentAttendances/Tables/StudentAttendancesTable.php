@@ -36,8 +36,8 @@ class StudentAttendancesTable
                     ->label('Unit')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
-                        'SMA' => 'info',
-                        'SMK' => 'warning',
+                        'SMAKT' => 'info',
+                        'SMKKT' => 'warning',
                     }),
 
                 TextColumn::make('attendable.class')
@@ -49,10 +49,12 @@ class StudentAttendancesTable
                     ->sortable(),
 
                 TextColumn::make('check_in')
-                    ->label('Masuk'),
+                    ->label('Masuk')
+                    ->time(),
 
                 TextColumn::make('check_out')
-                    ->label('Keluar'),
+                    ->label('Keluar')
+                    ->time(),
 
                 TextColumn::make('status')
                     ->label('Status')
@@ -123,6 +125,6 @@ class StudentAttendancesTable
                 ExportAction::make()->exporter(StudentAttendanceExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label('Download data'),
             ])
             ->defaultSort('date', 'desc');
-        ;
+
     }
 }

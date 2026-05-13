@@ -50,11 +50,6 @@ class StudentAttendanceResource extends Resource
             ->where('attendable_type', Student::class);
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        return (string) static::getModel()::count();
-    }
-
     public static function form(Schema $schema): Schema
     {
         return StudentAttendanceForm::configure($schema);

@@ -48,8 +48,8 @@ class StudentsRelationManager extends RelationManager
                     ->label('Unit')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
-                        'SMA' => 'info',
-                        'SMK' => 'warning',
+                        'SMAKT' => 'info',
+                        'SMKKT' => 'warning',
                     }),
 
                 TextColumn::make('class')
