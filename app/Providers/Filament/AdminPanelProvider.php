@@ -29,6 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->databaseNotifications()
+            ->brandName('BL Integrated System')
             ->colors([
                 'primary' => Color::Cyan,
             ])
