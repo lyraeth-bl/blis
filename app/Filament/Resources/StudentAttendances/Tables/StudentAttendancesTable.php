@@ -35,7 +35,7 @@ class StudentAttendancesTable
                 TextColumn::make('attendable.unit')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'SMAKT' => 'info',
                         'SMKKT' => 'warning',
                     }),
@@ -59,7 +59,7 @@ class StudentAttendancesTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'present' => 'success',
                         'late' => 'warning',
                         'permitted' => 'info',
@@ -69,7 +69,7 @@ class StudentAttendancesTable
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'fingerprint' => 'success',
                         'manual' => 'warning',
                     }),

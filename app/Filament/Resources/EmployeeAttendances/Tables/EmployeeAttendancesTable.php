@@ -52,7 +52,7 @@ class EmployeeAttendancesTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'present' => 'success',
                         'late' => 'warning',
                         'permitted' => 'info',
@@ -62,7 +62,7 @@ class EmployeeAttendancesTable
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'fingerprint' => 'success',
                         'manual' => 'warning',
                     }),

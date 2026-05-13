@@ -108,7 +108,7 @@ class EmployeesRelationManager extends RelationManager
                             }
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Error: ' . $e->getMessage())
+                                ->title('Error: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -139,7 +139,7 @@ class EmployeesRelationManager extends RelationManager
                             }
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Error: ' . $e->getMessage())
+                                ->title('Error: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }

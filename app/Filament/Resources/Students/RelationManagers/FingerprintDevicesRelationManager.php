@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Students\RelationManagers;
 use App\Filament\Resources\Students\StudentResource;
 use App\Models\FingerprintDevice;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -59,8 +58,9 @@ class FingerprintDevicesRelationManager extends RelationManager
 
                         foreach ($data['device_ids'] as $deviceId) {
                             $device = FingerprintDevice::find($deviceId);
-                            if (!$device)
+                            if (! $device) {
                                 continue;
+                            }
 
                             try {
                                 $success = $device->getClient()->setUserInfo(
@@ -77,20 +77,20 @@ class FingerprintDevicesRelationManager extends RelationManager
                                     $results['failed'][] = $device->name;
                                 }
                             } catch (\Throwable $e) {
-                                $results['failed'][] = $device->name . ' (' . $e->getMessage() . ')';
+                                $results['failed'][] = $device->name.' ('.$e->getMessage().')';
                             }
                         }
 
-                        if (!empty($results['success'])) {
+                        if (! empty($results['success'])) {
                             Notification::make()
-                                ->title('Berhasil push ke: ' . implode(', ', $results['success']))
+                                ->title('Berhasil push ke: '.implode(', ', $results['success']))
                                 ->success()
                                 ->send();
                         }
 
-                        if (!empty($results['failed'])) {
+                        if (! empty($results['failed'])) {
                             Notification::make()
-                                ->title('Gagal push ke: ' . implode(', ', $results['failed']))
+                                ->title('Gagal push ke: '.implode(', ', $results['failed']))
                                 ->danger()
                                 ->send();
                         }
@@ -122,7 +122,7 @@ class FingerprintDevicesRelationManager extends RelationManager
                             }
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Error: ' . $e->getMessage())
+                                ->title('Error: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }

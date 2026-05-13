@@ -3,7 +3,6 @@
 namespace App\Filament\Exports;
 
 use App\Models\Attendance;
-use App\Models\EmployeeAttendance;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
@@ -59,10 +58,10 @@ class EmployeeAttendanceExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Export absensi karyawan selesai. ' . Number::format($export->successful_rows) . ' ' . str('baris')->plural($export->successful_rows) . ' berhasil diexport.';
+        $body = 'Export absensi karyawan selesai. '.Number::format($export->successful_rows).' '.str('baris')->plural($export->successful_rows).' berhasil diexport.';
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . Number::format($failedRowsCount) . ' baris gagal.';
+            $body .= ' '.Number::format($failedRowsCount).' baris gagal.';
         }
 
         return $body;

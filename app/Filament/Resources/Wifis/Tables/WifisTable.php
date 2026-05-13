@@ -41,7 +41,7 @@ class WifisTable
 
                 TextColumn::make('link')
                     ->label('Link Admin')
-                    ->url(fn(Wifi $record): ?string => $record->link)
+                    ->url(fn (Wifi $record): ?string => $record->link)
                     ->openUrlInNewTab(),
 
                 TextColumn::make('created_at')
@@ -61,8 +61,8 @@ class WifisTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-                ImportAction::make()->importer(WifiImporter::class)->color(Color::Blue)->icon(Heroicon::ArrowUpTray)->label("Upload data"),
-                ExportAction::make()->exporter(WifiExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label("Download data"),
+                ImportAction::make()->importer(WifiImporter::class)->color(Color::Blue)->icon(Heroicon::ArrowUpTray)->label('Upload data'),
+                ExportAction::make()->exporter(WifiExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label('Download data'),
             ]);
     }
 }

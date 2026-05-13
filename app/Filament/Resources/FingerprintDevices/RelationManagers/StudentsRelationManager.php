@@ -47,7 +47,7 @@ class StudentsRelationManager extends RelationManager
                 TextColumn::make('unit')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'SMAKT' => 'info',
                         'SMKKT' => 'warning',
                     }),
@@ -112,7 +112,7 @@ class StudentsRelationManager extends RelationManager
                             }
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Error: ' . $e->getMessage())
+                                ->title('Error: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -143,7 +143,7 @@ class StudentsRelationManager extends RelationManager
                             }
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Error: ' . $e->getMessage())
+                                ->title('Error: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }

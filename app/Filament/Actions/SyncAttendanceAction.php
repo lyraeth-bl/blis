@@ -2,8 +2,8 @@
 
 namespace App\Filament\Actions;
 
-use App\Services\AttendanceService;
 use App\Models\FingerprintDevice;
+use App\Services\AttendanceService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -20,15 +20,15 @@ class SyncAttendanceAction
             ->modalDescription('Fetch data absensi dari mesin fingerprint dan simpan ke database.')
             ->action(function (FingerprintDevice $record): void {
                 try {
-                    $service = new AttendanceService();
+                    $service = new AttendanceService;
                     $results = $service->syncFromDevice($record);
 
                     Notification::make()
                         ->title('Sync berhasil')
                         ->body(
-                            "Inserted: {$results['inserted']} | " .
-                            "Updated: {$results['updated']} | " .
-                            "Skipped: {$results['skipped']} | " .
+                            "Inserted: {$results['inserted']} | ".
+                            "Updated: {$results['updated']} | ".
+                            "Skipped: {$results['skipped']} | ".
                             "Failed: {$results['failed']}"
                         )
                         ->success()

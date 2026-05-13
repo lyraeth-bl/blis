@@ -4,7 +4,6 @@ namespace App\Filament\Imports;
 
 use App\Models\Attendance;
 use App\Models\Student;
-use App\Models\StudentAttendance;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -72,10 +71,10 @@ class StudentAttendanceImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Import absensi siswa selesai. ' . Number::format($import->successful_rows) . ' ' . str('baris')->plural($import->successful_rows) . ' berhasil diimport.';
+        $body = 'Import absensi siswa selesai. '.Number::format($import->successful_rows).' '.str('baris')->plural($import->successful_rows).' berhasil diimport.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . Number::format($failedRowsCount) . ' baris gagal.';
+            $body .= ' '.Number::format($failedRowsCount).' baris gagal.';
         }
 
         return $body;
