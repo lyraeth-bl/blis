@@ -17,23 +17,34 @@ class WifiExporter extends Exporter
         return [
             ExportColumn::make('id')
                 ->label('ID'),
-            ExportColumn::make('ssid')->label('SSID'),
-            ExportColumn::make('location')->label('Location'),
-            ExportColumn::make('password')->label('Password'),
-            ExportColumn::make('ip_address')->label('IP address'),
-            ExportColumn::make('router_type')->label('Router type'),
-            ExportColumn::make('admin_username')->label('Admin username'),
-            ExportColumn::make('admin_password')->label('Admin password'),
-            ExportColumn::make('link')->label('Link'),
-            ExportColumn::make('description')->label('Deskripsi'),
+            ExportColumn::make('ssid')
+                ->label('SSID'),
+            ExportColumn::make('location')
+                ->label('Lokasi'),
+            ExportColumn::make('ip_address')
+                ->label('IP Address'),
+            ExportColumn::make('router_type')
+                ->label('Tipe Router'),
+            ExportColumn::make('admin_username')
+                ->label('Username Admin'),
+            ExportColumn::make('link')
+                ->label('Link Admin'),
+            ExportColumn::make('description')
+                ->label('Deskripsi'),
+            ExportColumn::make('created_at')
+                ->label('Dibuat'),
+            ExportColumn::make('updated_at')
+                ->label('Diperbarui'),
         ];
     }
 
     public static function getCompletedNotificationBody(Export $export): string
     {
         $body = 'Your wifi export has completed and '.Number::format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
+        $body = 'Your wifi export has completed and '.Number::format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
+            $body .= ' '.Number::format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
             $body .= ' '.Number::format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
         }
 

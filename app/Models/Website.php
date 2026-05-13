@@ -7,17 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'ssid',
-    'location',
-    'ip_address',
+    'name',
+    'url',
+    'username',
     'password',
-    'router_type',
-    'admin_username',
-    'admin_password',
-    'link',
+    'category',
     'description',
 ])]
-class Wifi extends Model
+class Website extends Model
 {
     use HasFactory;
 
@@ -25,7 +22,6 @@ class Wifi extends Model
     {
         return [
             'password' => 'encrypted',
-            'admin_password' => 'encrypted',
         ];
     }
 }
