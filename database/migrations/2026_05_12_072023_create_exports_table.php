@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('exports', function (Blueprint $table): void {
             $table->id();
             $table->timestamp('completed_at')->nullable();
-            $table->string('file_disk');
+            $table->string('file_disk')->nullable();
             $table->string('file_name')->nullable();
             $table->string('exporter');
             $table->unsignedInteger('processed_rows')->default(0);
