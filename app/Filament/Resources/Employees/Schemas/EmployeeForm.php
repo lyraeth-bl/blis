@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Filament\Resources\Employees\Schemas;
+
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class EmployeeForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Informasi Karyawan')->schema([
+                    TextInput::make('nip')
+                        ->label('NIP')
+                        ->required()
+                        ->unique(ignoreRecord: true),
+
+                    TextInput::make('name')
+                        ->label('Nama')
+                        ->required(),
+
+                    TextInput::make('email')
+                        ->label('Email')
+                        ->email()
+                        ->endsWith('@budiluhur.sch.id')
+                        ->hint('Optional')
+                        ->unique(ignoreRecord: true),
+
+                    TextInput::make('position')
+                        ->label('Jabatan')
+                        ->hint('Optional'),
+
+                    Textarea::make('description')
+                        ->label('Deskripsi')
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])->columns(2),
+            ]);
+    }
+}

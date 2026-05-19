@@ -7,8 +7,12 @@
     "guidelines": true,
     "mcp": true,
     "nightwatch": false,
+    "packages": [
+        "filament/filament"
+    ],
     "sail": true,
     "skills": [
-        "laravel-best-practices"
+        "laravel-best-practices",
+        "mcp-development"
     ]
 }
