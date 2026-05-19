@@ -1,7 +1,6 @@
 <?php
 
+use App\Http\Controllers\WifiController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [WifiController::class, 'index'])->name('wifi.index');
