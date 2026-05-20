@@ -23,8 +23,6 @@ class WebsiteResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeAlt;
 
-    protected static ?string $navigationLabel = 'Website';
-
     protected static ?string $modelLabel = 'Website';
 
     protected static ?string $pluralModelLabel = 'Daftar Website';
