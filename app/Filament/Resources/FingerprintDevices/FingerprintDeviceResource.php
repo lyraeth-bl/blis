@@ -24,7 +24,7 @@ class FingerprintDeviceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $navigationLabel = 'Mesin Fingerprint';
 
@@ -32,7 +32,7 @@ class FingerprintDeviceResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Daftar Mesin Fingerprint';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Alat';
+    protected static UnitEnum|string|null $navigationGroup = 'ADMS';
 
     protected static ?string $recordTitleAttribute = 'name';
 
