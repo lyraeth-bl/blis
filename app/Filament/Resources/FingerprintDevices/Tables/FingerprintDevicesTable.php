@@ -15,6 +15,7 @@ class FingerprintDevicesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->poll('5s')
             ->columns([
                 TextColumn::make('name')
                     ->label('Nama')
@@ -42,6 +43,18 @@ class FingerprintDevicesTable
                     ->color(fn (string $state): string => match ($state) {
                         'student' => 'info',
                         'employee' => 'warning',
+                    }),
+
+                TextColumn::make('connection_status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'active' => 'Aktif',
+                        default => 'Tidak Aktif',
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'active' => 'success',
+                        default => 'danger',
                     }),
 
                 TextColumn::make('last_seen_at')
