@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\QrAttendanceController;
 use App\Http\Controllers\QrAttendanceScanController;
+use App\Http\Controllers\WifiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,3 +14,5 @@ Route::get('/qr-absensi', QrAttendanceController::class)
 
 Route::post('/qr-absensi/scan', QrAttendanceScanController::class)
     ->name('qr-attendance.scan');
+
+Route::get('/', [WifiController::class, 'index'])->name('wifi.index');
