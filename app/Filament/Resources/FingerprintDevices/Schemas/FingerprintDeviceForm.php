@@ -20,8 +20,12 @@ class FingerprintDeviceForm
                         ->required(),
 
                     TextInput::make('location')
-                        ->label('Lokasi')
-                        ->required(),
+                        ->label('Lokasi'),
+
+                    TextInput::make('serial_number')
+                        ->label('Serial Number ADMS')
+                        ->maxLength(255)
+                        ->unique(ignoreRecord: true),
 
                     Select::make('type')
                         ->label('Tipe')
@@ -52,8 +56,7 @@ class FingerprintDeviceForm
 
                 Section::make('Koneksi')->schema([
                     TextInput::make('ip_address')
-                        ->label('IP Address')
-                        ->required(),
+                        ->label('IP Address'),
 
                     TextInput::make('port')
                         ->label('Port')
