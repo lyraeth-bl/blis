@@ -23,10 +23,14 @@ class WifiExporter extends Exporter
                 ->label('Lokasi'),
             ExportColumn::make('ip_address')
                 ->label('IP Address'),
+            ExportColumn::make('password')
+                ->label('Password'),
             ExportColumn::make('router_type')
                 ->label('Tipe Router'),
             ExportColumn::make('admin_username')
                 ->label('Username Admin'),
+            ExportColumn::make('admin_password')
+                ->label('Password Admin'),
             ExportColumn::make('link')
                 ->label('Link Admin'),
             ExportColumn::make('description')
@@ -40,12 +44,12 @@ class WifiExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Your wifi export has completed and '.Number::format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
-        $body = 'Your wifi export has completed and '.Number::format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
+        $body = 'Your wifi export has completed and ' . Number::format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
+        $body = 'Your wifi export has completed and ' . Number::format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' '.Number::format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
-            $body .= ' '.Number::format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
+            $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
+            $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
         }
 
         return $body;
