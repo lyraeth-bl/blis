@@ -14,7 +14,6 @@ use App\Models\Student;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -22,17 +21,17 @@ class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Siswa dan Siswi';
+    protected static ?string $navigationLabel = 'Siswa/i';
 
     protected static ?string $modelLabel = 'Siswa/i';
 
     protected static ?string $pluralModelLabel = 'Daftar Siswa/i';
 
-    protected static UnitEnum|string|null $navigationGroup = 'User';
+    protected static UnitEnum|string|null $navigationGroup = 'ADMS';
 
     protected static ?string $recordTitleAttribute = 'name';
 

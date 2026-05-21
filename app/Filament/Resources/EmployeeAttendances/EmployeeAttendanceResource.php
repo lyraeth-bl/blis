@@ -14,7 +14,6 @@ use App\Models\Employee;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
@@ -23,19 +22,19 @@ class EmployeeAttendanceResource extends Resource
 {
     protected static ?string $model = Attendance::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentList;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 11;
 
     protected static ?string $modelLabel = 'Absensi Karyawan';
 
     protected static ?string $pluralModelLabel = 'Daftar Absensi Karyawan';
 
-    protected static ?string $navigationLabel = 'Karyawan';
+    protected static ?string $navigationLabel = 'Absensi Karyawan';
 
     protected static ?string $slug = 'employee-attendances';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Absensi';
+    protected static UnitEnum|string|null $navigationGroup = 'ADMS';
 
     protected static bool $shouldRegisterNavigation = true;
 
