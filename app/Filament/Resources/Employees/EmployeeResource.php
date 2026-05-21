@@ -14,7 +14,6 @@ use App\Models\Employee;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -22,7 +21,7 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?int $navigationSort = 1;
 
@@ -32,7 +31,7 @@ class EmployeeResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Daftar Karyawan';
 
-    protected static UnitEnum|string|null $navigationGroup = 'User';
+    protected static UnitEnum|string|null $navigationGroup = 'ADMS';
 
     protected static ?string $recordTitleAttribute = 'name';
 

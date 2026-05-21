@@ -13,7 +13,6 @@ use App\Models\Wifi;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -21,7 +20,7 @@ class WifiResource extends Resource
 {
     protected static ?string $model = Wifi::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWifi;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?string $modelLabel = 'Wifi';
 

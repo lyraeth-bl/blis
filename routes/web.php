@@ -27,4 +27,4 @@ Route::middleware('throttle:120,1')->group(function (): void {
         ->name('adms.get-request');
 });
 
-Route::get('/', [WifiController::class, 'index'])->name('wifi.index');
+Route::get('/wifi', [WifiController::class, 'index'])->name('wifi.index');

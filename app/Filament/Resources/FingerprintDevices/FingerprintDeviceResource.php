@@ -15,7 +15,6 @@ use App\Models\FingerprintDevice;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -23,7 +22,7 @@ class FingerprintDeviceResource extends Resource
 {
     protected static ?string $model = FingerprintDevice::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFingerPrint;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?int $navigationSort = 1;
 
