@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Carbon;
 
 #[Fillable([
     'serial_number',
@@ -24,6 +25,17 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 ])]
 class FingerprintDevice extends Model
 {
+    public function getConnectionStatusAttribute(): string
+    {
+        if (!$this->last_seen_at instanceof Carbon) {
+            return 'inactive';
+        }
+
+        return $this->last_seen_at->gte(now()->subSeconds(30))
+            ? 'active'
+            : 'inactive';
+    }
+
     protected function casts(): array
     {
         return [

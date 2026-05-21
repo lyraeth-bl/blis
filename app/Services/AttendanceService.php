@@ -3,36 +3,69 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\AttendanceFetchLog;
 use App\Models\Employee;
 use App\Models\FingerprintDevice;
+use App\Models\SpoPostLog;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AttendanceService
 {
     public function syncFromDevice(FingerprintDevice $device): array
     {
         $results = ['inserted' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0];
+        $syncId = (string) Str::uuid();
+        $startedAt = microtime(true);
+        $fetchLog = AttendanceFetchLog::create([
+            'sync_id' => $syncId,
+            'fingerprint_device_id' => $device->id,
+            'user_id' => auth()->id(),
+            'device_name' => $device->name,
+            'device_type' => $device->type,
+            'device_ip_address' => $device->ip_address,
+            'device_port' => $device->port,
+            'status' => 'running',
+            'started_at' => now(),
+        ]);
 
         try {
             $logs = $device->getClient()->fetchAttLog();
         } catch (\Throwable $e) {
-            Log::error('AttendanceService.fetchAttLog_failed', [
-                'device_id' => $device->id,
-                'err' => $e->getMessage(),
+            $fetchLog->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+                'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                'finished_at' => now(),
             ]);
+
             throw $e;
         }
 
+        $fetchLog->update([
+            'fetched' => count($logs),
+            'first_log_at' => $this->firstLogDateTime($logs),
+            'last_log_at' => $this->lastLogDateTime($logs),
+            'raw_rows_sample' => array_slice($logs, 0, 5),
+        ]);
+
         foreach ($logs as $log) {
             try {
-                $pin = $log['PIN'];
-                $datetime = Carbon::parse($log['DateTime']);
+                $pin = (string) ($log['PIN'] ?? '');
+                $rawDateTime = (string) ($log['DateTime'] ?? '');
+
+                if ($pin === '' || $rawDateTime === '') {
+                    $results['failed']++;
+
+                    continue;
+                }
+
+                $datetime = Carbon::parse($rawDateTime);
                 $date = $datetime->toDateString();
                 $time = $datetime->toTimeString();
 
@@ -44,28 +77,53 @@ class AttendanceService
                     continue;
                 }
 
-                $action = $this->processLog($device, $attendable, $datetime, $date, $time);
+                $action = $this->processLog($device, $attendable, $datetime, $date, $time, $fetchLog);
                 $results[$action]++;
             } catch (\Throwable $e) {
-                Log::error('AttendanceService.processLog_failed', [
-                    'device_id' => $device->id,
-                    'log' => $log,
-                    'err' => $e->getMessage(),
-                ]);
                 $results['failed']++;
             }
         }
 
+        $fetchLog->update([
+            'status' => 'success',
+            ...$results,
+            'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'finished_at' => now(),
+        ]);
+
         return $results;
+    }
+
+    /**
+     * @param  array<int, array{DateTime?: string}>  $logs
+     */
+    protected function firstLogDateTime(array $logs): ?string
+    {
+        foreach ($logs as $log) {
+            if (! blank($log['DateTime'] ?? null)) {
+                return (string) $log['DateTime'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<int, array{DateTime?: string}>  $logs
+     */
+    protected function lastLogDateTime(array $logs): ?string
+    {
+        for ($index = count($logs) - 1; $index >= 0; $index--) {
+            if (! blank($logs[$index]['DateTime'] ?? null)) {
+                return (string) $logs[$index]['DateTime'];
+            }
+        }
+
+        return null;
     }
 
     protected function resolveAttendable(string $type, string $pin): ?Model
     {
-        Log::info('AttendanceService.resolveAttendable', [
-            'type' => $type,
-            'pin' => $pin,
-        ]);
-
         return match ($type) {
             'student' => Student::where('nis', $pin)->first(),
             'employee' => Employee::where('nip', $pin)->first(),
@@ -121,6 +179,7 @@ class AttendanceService
         Carbon $datetime,
         string $date,
         string $time,
+        ?AttendanceFetchLog $fetchLog = null,
     ): string {
         $checkInStart = Carbon::parse($device->check_in_start);
         $checkInEnd = Carbon::parse($device->check_in_end);
@@ -135,17 +194,17 @@ class AttendanceService
         // Jam checkout
         if ($fingerTime->gte($checkOutStart)) {
             if ($existing) {
-                $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkOut');
+                $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkOut', $fetchLog);
 
                 $existing->update(['check_out' => $time]);
 
-                $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkOut');
+                $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkOut', $fetchLog);
 
                 return 'updated';
             }
 
             // Finger checkout tapi ga ada data pagi -> insert dengan status lupa check-in
-            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkOut');
+            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkOut', $fetchLog);
 
             Attendance::create([
                 'attendable_type' => $attendable::class,
@@ -158,7 +217,7 @@ class AttendanceService
                 'description' => 'Lupa check-in',
             ]);
 
-            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkOut');
+            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkOut', $fetchLog);
 
             return 'inserted';
         }
@@ -169,7 +228,7 @@ class AttendanceService
                 return 'skipped';
             }
 
-            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkIn');
+            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkIn', $fetchLog);
 
             Attendance::create([
                 'attendable_type' => $attendable::class,
@@ -181,7 +240,7 @@ class AttendanceService
                 'source' => 'fingerprint',
             ]);
 
-            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkIn');
+            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkIn', $fetchLog);
 
             return 'inserted';
         }
@@ -192,7 +251,7 @@ class AttendanceService
                 return 'skipped';
             }
 
-            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkIn');
+            $this->sendStudentAttendanceToSpo($device, $attendable, $datetime, 'checkIn', $fetchLog);
 
             Attendance::create([
                 'attendable_type' => $attendable::class,
@@ -204,7 +263,7 @@ class AttendanceService
                 'source' => 'fingerprint',
             ]);
 
-            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkIn');
+            $this->sendStudentAttendanceNotification($device, $attendable, $datetime, 'checkIn', $fetchLog);
 
             return 'inserted';
         }
@@ -228,21 +287,73 @@ class AttendanceService
         Model $attendable,
         Carbon $datetime,
         string $field,
+        ?AttendanceFetchLog $fetchLog = null,
     ): void {
         if (! $attendable instanceof Student) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'attendance',
+                field: $field,
+                status: 'skipped',
+                skippedReason: 'Attendable is not a student.',
+            );
+
             return;
         }
 
         $url = config('spo.attendance_url');
 
         if (blank($url)) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'attendance',
+                field: $field,
+                status: 'failed',
+                url: $url,
+                errorMessage: 'SPO attendance URL is not configured.',
+            );
+
             throw new \RuntimeException('SPO attendance URL is not configured.');
         }
 
         $payload = $this->makeStudentAttendancePayload($attendable, $datetime, $field);
-        $response = $this->spoRequest()->post($url, $payload);
+
+        try {
+            $response = $this->spoRequest()->post($url, $payload);
+        } catch (\Throwable $e) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'attendance',
+                field: $field,
+                status: 'failed',
+                url: $url,
+                payload: $payload,
+                errorMessage: $e->getMessage(),
+            );
+
+            throw $e;
+        }
 
         if ($response->successful()) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'attendance',
+                field: $field,
+                status: 'success',
+                url: $url,
+                httpStatus: $response->status(),
+                payload: $payload,
+                responseBody: $response->body(),
+            );
+
             Log::info('AttendanceService.spo_attendance_sent', [
                 'device_id' => $device->id,
                 'student_id' => $attendable->id,
@@ -252,6 +363,20 @@ class AttendanceService
 
             return;
         }
+
+        $this->logSpoPost(
+            fetchLog: $fetchLog,
+            device: $device,
+            attendable: $attendable,
+            endpointType: 'attendance',
+            field: $field,
+            status: 'failed',
+            url: $url,
+            httpStatus: $response->status(),
+            payload: $payload,
+            responseBody: $response->body(),
+            errorMessage: "SPO attendance request failed with status {$response->status()}.",
+        );
 
         Log::warning('AttendanceService.spo_attendance_failed', [
             'device_id' => $device->id,
@@ -270,14 +395,35 @@ class AttendanceService
         Model $attendable,
         Carbon $datetime,
         string $field,
+        ?AttendanceFetchLog $fetchLog = null,
     ): void {
         if (! $attendable instanceof Student) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'notification',
+                field: $field,
+                status: 'skipped',
+                skippedReason: 'Attendable is not a student.',
+            );
+
             return;
         }
 
         $url = config('spo.notify_url');
 
         if (blank($url)) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'notification',
+                field: $field,
+                status: 'skipped',
+                skippedReason: 'SPO notify URL is not configured.',
+            );
+
             return;
         }
 
@@ -285,7 +431,19 @@ class AttendanceService
 
         try {
             $response = $this->spoRequest()->post($url, $payload);
-        } catch (ConnectionException $e) {
+        } catch (\Throwable $e) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'notification',
+                field: $field,
+                status: 'failed',
+                url: $url,
+                payload: $payload,
+                errorMessage: $e->getMessage(),
+            );
+
             Log::error('AttendanceService.spo_notify_error', [
                 'device_id' => $device->id,
                 'student_id' => $attendable->id,
@@ -298,6 +456,19 @@ class AttendanceService
         }
 
         if ($response->successful()) {
+            $this->logSpoPost(
+                fetchLog: $fetchLog,
+                device: $device,
+                attendable: $attendable,
+                endpointType: 'notification',
+                field: $field,
+                status: 'success',
+                url: $url,
+                httpStatus: $response->status(),
+                payload: $payload,
+                responseBody: $response->body(),
+            );
+
             Log::info('AttendanceService.spo_notify_sent', [
                 'device_id' => $device->id,
                 'student_id' => $attendable->id,
@@ -308,6 +479,20 @@ class AttendanceService
             return;
         }
 
+        $this->logSpoPost(
+            fetchLog: $fetchLog,
+            device: $device,
+            attendable: $attendable,
+            endpointType: 'notification',
+            field: $field,
+            status: 'failed',
+            url: $url,
+            httpStatus: $response->status(),
+            payload: $payload,
+            responseBody: $response->body(),
+            errorMessage: "SPO notify request failed with status {$response->status()}.",
+        );
+
         Log::warning('AttendanceService.spo_notify_failed', [
             'device_id' => $device->id,
             'student_id' => $attendable->id,
@@ -315,6 +500,41 @@ class AttendanceService
             'field' => $field,
             'status' => $response->status(),
             'body' => str($response->body())->limit(1000)->toString(),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $payload
+     */
+    protected function logSpoPost(
+        ?AttendanceFetchLog $fetchLog,
+        FingerprintDevice $device,
+        ?Model $attendable,
+        string $endpointType,
+        ?string $field,
+        string $status,
+        ?string $url = null,
+        ?int $httpStatus = null,
+        ?array $payload = null,
+        ?string $responseBody = null,
+        ?string $errorMessage = null,
+        ?string $skippedReason = null,
+    ): void {
+        SpoPostLog::create([
+            'attendance_fetch_log_id' => $fetchLog?->id,
+            'fingerprint_device_id' => $device->id,
+            'attendable_type' => $attendable?->getMorphClass(),
+            'attendable_id' => $attendable?->getKey(),
+            'endpoint_type' => $endpointType,
+            'field' => $field,
+            'status' => $status,
+            'url' => $url,
+            'http_status' => $httpStatus,
+            'payload' => $payload,
+            'response_body' => filled($responseBody) ? str($responseBody)->limit(5000)->toString() : null,
+            'error_message' => $errorMessage,
+            'skipped_reason' => $skippedReason,
+            'attempted_at' => now(),
         ]);
     }
 
