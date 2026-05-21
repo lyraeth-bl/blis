@@ -41,7 +41,6 @@ class WifiForm
 
                     Select::make('router_type')
                         ->label('Tipe Router')
-                        ->native(false)
                         ->options([
                             'tenda' => 'Tenda',
                             'tp-link' => 'TP-Link',
