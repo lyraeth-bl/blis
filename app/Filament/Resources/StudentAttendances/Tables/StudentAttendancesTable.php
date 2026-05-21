@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StudentAttendances\Tables;
 
 use App\Filament\Exports\StudentAttendanceExporter;
 use App\Filament\Imports\StudentAttendanceImporter;
+use App\Models\Attendance;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -32,13 +33,10 @@ class StudentAttendancesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('attendable.unit')
+                TextColumn::make('unit')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'SMAKT' => 'info',
-                        'SMKKT' => 'warning',
-                    }),
+                    ->state(fn (Attendance $record): string => $record->attendable?->unitModel?->display_name ?? $record->attendable?->unit ?? '-'),
 
                 TextColumn::make('attendable.class')
                     ->label('Kelas'),
@@ -106,12 +104,6 @@ class StudentAttendancesTable
                         'fingerprint' => 'Fingerprint',
                     ]),
 
-                SelectFilter::make('attendable.unit')
-                    ->label('Unit')
-                    ->options([
-                        'SMAKT' => 'SMAKT',
-                        'SMKKT' => 'SMKKT',
-                    ]),
             ])
             ->recordActions([
                 ViewAction::make(),

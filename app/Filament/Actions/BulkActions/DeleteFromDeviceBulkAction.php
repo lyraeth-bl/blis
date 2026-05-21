@@ -20,10 +20,17 @@ class DeleteFromDeviceBulkAction
             ->form([
                 CheckboxList::make('device_ids')
                     ->label('Pilih Device')
-                    ->options(
-                        FingerprintDevice::where('type', $type)
-                            ->pluck('name', 'id')
-                    )
+                    ->options(fn (): array => FingerprintDevice::query()
+                        ->where('type', $type)
+                        ->with('units')
+                        ->orderBy('name')
+                        ->get()
+                        ->mapWithKeys(fn (FingerprintDevice $device): array => [
+                            $device->id => filled($device->unit_display_names)
+                                ? "{$device->name} ({$device->unit_display_names})"
+                                : $device->name,
+                        ])
+                        ->all())
                     ->required(),
             ])
             ->action(function (Collection $records, array $data) use ($type): void {
@@ -37,6 +44,12 @@ class DeleteFromDeviceBulkAction
                     }
 
                     foreach ($records as $record) {
+                        if (! $device->supportsUnit($record->unit_id)) {
+                            $results['failed'][] = $record->name.' (unit berbeda)';
+
+                            continue;
+                        }
+
                         try {
                             $success = $device->getClient()->deleteUser($record->pin);
 

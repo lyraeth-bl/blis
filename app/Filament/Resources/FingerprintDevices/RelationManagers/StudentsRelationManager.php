@@ -44,13 +44,10 @@ class StudentsRelationManager extends RelationManager
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('unit')
+                TextColumn::make('unitModel.display_name')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'SMAKT' => 'info',
-                        'SMKKT' => 'warning',
-                    }),
+                    ->placeholder('-'),
 
                 TextColumn::make('class')
                     ->label('Kelas')
@@ -72,11 +69,22 @@ class StudentsRelationManager extends RelationManager
                     ->form([
                         Select::make('student_id')
                             ->label('Siswa')
-                            ->options(Student::query()->pluck('name', 'id'))
+                            ->options(fn (): array => Student::query()
+                                ->whereIn('unit_id', $this->getOwnerRecord()->units()->pluck('units.id'))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->searchable()
                             ->required(),
                     ])
                     ->action(function (array $data): void {
+                        $student = Student::query()->find($data['student_id']);
+
+                        abort_unless(
+                            $student !== null && $this->getOwnerRecord()->supportsUnit($student->unit_id),
+                            403,
+                        );
+
                         $this->getOwnerRecord()->students()->syncWithoutDetaching([
                             $data['student_id'] => ['pushed_at' => null],
                         ]);

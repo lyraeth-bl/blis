@@ -11,13 +11,14 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class DeviceRawLogResource extends Resource
 {
     protected static ?string $model = DeviceRawLog::class;
 
-    protected static string | BackedEnum | null $navigationIcon = null;
+    protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?int $navigationSort = 1;
 
@@ -27,7 +28,7 @@ class DeviceRawLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Log ADMS';
 
-    protected static UnitEnum | string | null $navigationGroup = 'Logs';
+    protected static UnitEnum|string|null $navigationGroup = 'Logs';
 
     public static function infolist(Schema $schema): Schema
     {
@@ -42,6 +43,11 @@ class DeviceRawLogResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function getPages(): array

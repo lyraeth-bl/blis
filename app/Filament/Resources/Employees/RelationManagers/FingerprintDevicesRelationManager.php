@@ -30,6 +30,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                 TextColumn::make('location')
                     ->label('Lokasi'),
 
+                TextColumn::make('units.display_name')
+                    ->label('Unit')
+                    ->badge()
+                    ->separator(', ')
+                    ->placeholder('-'),
+
                 TextColumn::make('ip_address')
                     ->label('IP Address'),
 
@@ -46,14 +52,16 @@ class FingerprintDevicesRelationManager extends RelationManager
                     ->form([
                         CheckboxList::make('device_ids')
                             ->label('Pilih Device')
-                            ->options(
-                                FingerprintDevice::where('type', 'student')
-                                    ->pluck('name', 'id')
-                            )
+                            ->options(fn (): array => FingerprintDevice::query()
+                                ->where('type', 'employee')
+                                ->whereHas('units', fn ($query) => $query->whereKey($this->getOwnerRecord()->unit_id))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->required(),
                     ])
                     ->action(function (array $data): void {
-                        $student = $this->getOwnerRecord();
+                        $employee = $this->getOwnerRecord();
                         $results = ['success' => [], 'failed' => []];
 
                         foreach ($data['device_ids'] as $deviceId) {
@@ -62,15 +70,21 @@ class FingerprintDevicesRelationManager extends RelationManager
                                 continue;
                             }
 
+                            if (! $device->supportsUnit($employee->unit_id)) {
+                                $results['failed'][] = $device->name.' (unit berbeda)';
+
+                                continue;
+                            }
+
                             try {
                                 $success = $device->getClient()->setUserInfo(
-                                    pin: $student->pin,
-                                    name: $student->name,
+                                    pin: $employee->pin,
+                                    name: $employee->name,
                                 );
 
                                 if ($success) {
-                                    $device->students()->syncWithoutDetaching([
-                                        $student->id => ['pushed_at' => now()],
+                                    $device->employees()->syncWithoutDetaching([
+                                        $employee->id => ['pushed_at' => now()],
                                     ]);
                                     $results['success'][] = $device->name;
                                 } else {
@@ -103,12 +117,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(function (FingerprintDevice $record): void {
-                        $student = $this->getOwnerRecord();
+                        $employee = $this->getOwnerRecord();
                         try {
-                            $success = $record->getClient()->deleteUser($student->pin);
+                            $success = $record->getClient()->deleteUser($employee->pin);
 
                             if ($success) {
-                                $record->students()->detach($student->id);
+                                $record->employees()->detach($employee->id);
 
                                 Notification::make()
                                     ->title("Berhasil hapus dari {$record->name}")

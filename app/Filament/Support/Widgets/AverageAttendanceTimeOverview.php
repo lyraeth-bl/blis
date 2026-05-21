@@ -5,7 +5,9 @@ namespace App\Filament\Support\Widgets;
 use App\Models\Attendance;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 abstract class AverageAttendanceTimeOverview extends BaseWidget
 {
@@ -20,9 +22,21 @@ abstract class AverageAttendanceTimeOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $averages = Attendance::query()
+        $query = Attendance::query()
             ->where('attendable_type', $this->getAttendableType())
-            ->whereDate('date', today())
+            ->whereDate('date', today());
+
+        $user = Auth::user();
+
+        if ($user !== null && ! $user->isAdmin()) {
+            $query->whereHasMorph(
+                'attendable',
+                [$this->getAttendableType()],
+                fn (Builder $query): Builder => $query->whereIn('unit_id', $user->accessibleUnitIds()),
+            );
+        }
+
+        $averages = $query
             ->selectRaw('
                 AVG(TIME_TO_SEC(check_in)) as average_check_in_seconds,
                 AVG(TIME_TO_SEC(check_out)) as average_check_out_seconds,

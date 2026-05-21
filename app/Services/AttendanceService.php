@@ -146,6 +146,10 @@ class AttendanceService
             return 'skipped';
         }
 
+        if (! $device->supportsUnit($attendable->unit_id)) {
+            return 'skipped';
+        }
+
         $action = $this->processLog(
             device: $device,
             attendable: $attendable,

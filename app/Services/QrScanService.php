@@ -33,7 +33,7 @@ class QrScanService
 
         // Cari Student by NIS di DB lokal
         $student = Student::where('nis', $nis)
-            ->select(['id', 'nis', 'name', 'unit', 'class'])
+            ->select(['id', 'nis', 'name', 'unit', 'unit_id', 'class'])
             ->first();
 
         if (! $student) {
@@ -41,7 +41,7 @@ class QrScanService
         }
 
         $now = Carbon::now();
-        $tipe = $this->resolveAttendanceType($now);
+        $tipe = $this->resolveAttendanceType($student, $now);
 
         $attendance = $this->recordAttendance($student, $now, $tipe, $qrMode);
 
@@ -115,9 +115,10 @@ class QrScanService
 
     // ─── Attendance Logic ─────────────────────────────────────────────────────
 
-    private function resolveAttendanceType(Carbon $now): string
+    private function resolveAttendanceType(Student $student, Carbon $now): string
     {
         $device = FingerprintDevice::where('type', 'student')
+            ->whereHas('units', fn ($query) => $query->whereKey($student->unit_id))
             ->select(['check_in_end', 'check_out_start'])
             ->first();
 
@@ -133,6 +134,7 @@ class QrScanService
     private function recordAttendance(Student $student, Carbon $now, string $tipe, string $qrMode): Attendance
     {
         $device = FingerprintDevice::where('type', 'student')
+            ->whereHas('units', fn ($query) => $query->whereKey($student->unit_id))
             ->select(['check_in_end'])
             ->first();
 

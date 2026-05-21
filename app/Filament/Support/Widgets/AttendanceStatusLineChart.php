@@ -5,8 +5,10 @@ namespace App\Filament\Support\Widgets;
 use App\Models\Attendance;
 use Carbon\CarbonInterface;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 abstract class AttendanceStatusLineChart extends ChartWidget
 {
@@ -44,10 +46,22 @@ abstract class AttendanceStatusLineChart extends ChartWidget
             ],
         ];
 
-        $counts = Attendance::query()
+        $query = Attendance::query()
             ->where('attendable_type', $this->getAttendableType())
             ->whereBetween('date', [$startDate, $endDate])
-            ->whereIn('status', array_keys($statuses))
+            ->whereIn('status', array_keys($statuses));
+
+        $user = Auth::user();
+
+        if ($user !== null && ! $user->isAdmin()) {
+            $query->whereHasMorph(
+                'attendable',
+                [$this->getAttendableType()],
+                fn (Builder $query): Builder => $query->whereIn('unit_id', $user->accessibleUnitIds()),
+            );
+        }
+
+        $counts = $query
             ->selectRaw('date, status, COUNT(*) as total')
             ->groupBy('date', 'status')
             ->get()
