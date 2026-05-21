@@ -35,6 +35,7 @@ class WebsiteForm
 
                     Select::make('category')
                         ->label('Kategori')
+                        ->native(false)
                         ->options([
                             'Business' => 'Business',
                             'Personal' => 'Personal',

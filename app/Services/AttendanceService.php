@@ -73,6 +73,48 @@ class AttendanceService
         };
     }
 
+    /**
+     * @param  array{status1?: mixed, status2?: mixed, status3?: mixed, status4?: mixed, status5?: mixed, raw_payload?: string}  $metadata
+     */
+    public function syncPushedLog(
+        FingerprintDevice $device,
+        string $pin,
+        Carbon $datetime,
+        array $metadata = [],
+    ): string {
+        $attendable = $this->resolveAttendable($device->type, $pin);
+
+        if (! $attendable) {
+            return 'skipped';
+        }
+
+        $action = $this->processLog(
+            device: $device,
+            attendable: $attendable,
+            datetime: $datetime,
+            date: $datetime->toDateString(),
+            time: $datetime->toTimeString(),
+        );
+
+        Attendance::query()
+            ->where('attendable_type', $attendable::class)
+            ->where('attendable_id', $attendable->id)
+            ->where('date', $datetime->toDateString())
+            ->update([
+                'fingerprint_device_id' => $device->id,
+                'adms_pin' => $pin,
+                'adms_punch_time' => $datetime,
+                'adms_status1' => $metadata['status1'] ?? null,
+                'adms_status2' => $metadata['status2'] ?? null,
+                'adms_status3' => $metadata['status3'] ?? null,
+                'adms_status4' => $metadata['status4'] ?? null,
+                'adms_status5' => $metadata['status5'] ?? null,
+                'adms_raw_payload' => $metadata['raw_payload'] ?? null,
+            ]);
+
+        return $action;
+    }
+
     protected function processLog(
         FingerprintDevice $device,
         Model $attendable,

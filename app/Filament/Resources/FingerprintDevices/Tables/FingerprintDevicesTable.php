@@ -25,6 +25,11 @@ class FingerprintDevicesTable
                     ->label('Lokasi')
                     ->searchable(),
 
+                TextColumn::make('serial_number')
+                    ->label('Serial ADMS')
+                    ->searchable()
+                    ->toggleable(),
+
                 TextColumn::make('ip_address')
                     ->label('IP Address'),
 
@@ -38,6 +43,12 @@ class FingerprintDevicesTable
                         'student' => 'info',
                         'employee' => 'warning',
                     }),
+
+                TextColumn::make('last_seen_at')
+                    ->label('Terakhir Online')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->label('Dibuat')

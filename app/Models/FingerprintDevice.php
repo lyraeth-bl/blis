@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 #[Fillable([
+    'serial_number',
     'name',
     'location',
     'ip_address',
     'port',
     'comm_key',
     'type',
+    'last_seen_at',
     'check_in_start',
     'check_in_end',
     'check_out_start',
@@ -29,6 +31,7 @@ class FingerprintDevice extends Model
             'check_in_start' => 'datetime:H:i',
             'check_in_end' => 'datetime:H:i',
             'check_out_start' => 'datetime:H:i',
+            'last_seen_at' => 'datetime',
         ];
     }
 
@@ -49,6 +52,11 @@ class FingerprintDevice extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function rawLogs(): HasMany
+    {
+        return $this->hasMany(DeviceRawLog::class);
     }
 
     public function getClient(): FingerprintClient
