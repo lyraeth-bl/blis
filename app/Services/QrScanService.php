@@ -36,7 +36,7 @@ class QrScanService
             ->select(['id', 'nis', 'name', 'unit', 'class'])
             ->first();
 
-        if (!$student) {
+        if (! $student) {
             throw new \RuntimeException("Siswa dengan NIS {$nis} tidak ditemukan.");
         }
 
@@ -78,7 +78,7 @@ class QrScanService
         $secret = config('spo.qr_token_secret');
         $expectedHmac = hash_hmac('sha256', "{$nis}:{$timestamp}", $secret);
 
-        if (!hash_equals($expectedHmac, $hmac)) {
+        if (! hash_equals($expectedHmac, $hmac)) {
             throw new \RuntimeException('Token tidak valid.');
         }
 
@@ -121,7 +121,7 @@ class QrScanService
             ->select(['check_in_end', 'check_out_start'])
             ->first();
 
-        if (!$device) {
+        if (! $device) {
             throw new \RuntimeException('Konfigurasi jam absensi tidak ditemukan.');
         }
 
@@ -136,7 +136,7 @@ class QrScanService
             ->select(['check_in_end'])
             ->first();
 
-        if (!$device) {
+        if (! $device) {
             throw new \RuntimeException('Konfigurasi jam absensi tidak ditemukan.');
         }
 
@@ -198,7 +198,7 @@ class QrScanService
             ->retry(config('spo.retry.times', 2), config('spo.retry.sleep', 200))
             ->post(config('spo.attendance_url'), $payload);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \RuntimeException(
                 "SPO responded with {$response->status()}: {$response->body()}"
             );

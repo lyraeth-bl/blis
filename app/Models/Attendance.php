@@ -11,6 +11,14 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
     'attendable_type',
     'attendable_id',
     'fingerprint_device_id',
+    'adms_pin',
+    'adms_punch_time',
+    'adms_status1',
+    'adms_status2',
+    'adms_status3',
+    'adms_status4',
+    'adms_status5',
+    'adms_raw_payload',
     'date',
     'check_in',
     'check_out',
@@ -29,6 +37,7 @@ class Attendance extends Model
             'date' => 'date',
             'check_in' => 'datetime:H:i',
             'check_out' => 'datetime:H:i',
+            'adms_punch_time' => 'datetime',
             'edited_at' => 'datetime',
         ];
     }
