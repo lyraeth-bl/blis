@@ -11,9 +11,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -37,17 +35,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('ADMS')
-                    ->icon(Heroicon::FingerPrint),
+                    ->label('ADMS'),
                 NavigationGroup::make()
-                    ->label('Alat')
-                    ->icon(Heroicon::OutlinedWrenchScrewdriver),
+                    ->label('Alat'),
                 NavigationGroup::make()
-                    ->label('Jaringan')
-                    ->icon(Heroicon::OutlinedGlobeAlt),
+                    ->label('Jaringan'),
                 NavigationGroup::make()
-                    ->label('Logs')
-                    ->icon(Heroicon::OutlinedClipboardDocumentList),
+                    ->label('Logs'),
+                NavigationGroup::make()
+                    ->label('Pengaturan'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -57,7 +53,6 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

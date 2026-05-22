@@ -6,86 +6,115 @@
     <title>Daftar WiFi — BLIS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            const stored = localStorage.getItem('blis-theme');
+            if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --primary:          #5e6ad2;
-            --primary-hover:    #828fff;
-            --primary-focus:    #5e69d1;
-            --ink:              #f7f8f8;
-            --ink-muted:        #d0d6e0;
-            --ink-subtle:       #8a8f98;
-            --ink-tertiary:     #62666d;
-            --canvas:           #010102;
-            --surface-1:        #0f1011;
-            --surface-2:        #141516;
-            --surface-3:        #18191a;
-            --hairline:         #23252a;
-            --hairline-strong:  #34343a;
-            --semantic-success: #27a644;
+            --primary:           #171717;
+            --on-primary:        #ffffff;
+            --ink:               #171717;
+            --body:              #4d4d4d;
+            --mute:              #888888;
+            --hairline:          #ebebeb;
+            --hairline-strong:   #a1a1a1;
+            --canvas:            #ffffff;
+            --canvas-soft:       #fafafa;
+            --canvas-soft-2:     #f5f5f5;
+            --success:           #27a644;
+            --link:              #0070f3;
+            --shadow-card:       0 1px 1px #00000005, 0 2px 2px #0000000a, inset 0 0 0 1px #00000014;
+            --shadow-card-hover: 0 1px 1px #0000000a, 0 4px 8px #00000010, inset 0 0 0 1px #00000018;
         }
 
-        html { scroll-behavior: smooth; }
+        [data-theme="dark"] {
+            --primary:           #ffffff;
+            --on-primary:        #171717;
+            --ink:               #ededed;
+            --body:              #a1a1a1;
+            --mute:              #666666;
+            --hairline:          #2a2a2a;
+            --hairline-strong:   #3d3d3d;
+            --canvas:            #111111;
+            --canvas-soft:       #0a0a0a;
+            --canvas-soft-2:     #161616;
+            --shadow-card:       0 1px 1px #00000030, 0 2px 2px #00000040, inset 0 0 0 1px #ffffff0a;
+            --shadow-card-hover: 0 1px 1px #00000050, 0 4px 8px #00000060, inset 0 0 0 1px #ffffff12;
+        }
+
+        [data-theme="dark"] nav {
+            background: rgba(10, 10, 10, 0.85);
+        }
+
+        ::selection { background: #171717; color: #f2f2f2; }
+
+        html { background: var(--canvas-soft); scroll-behavior: smooth; }
 
         body {
-            background-color: var(--canvas);
+            font-family: 'Geist', Inter, system-ui, -apple-system, sans-serif;
             color: var(--ink);
-            font-family: 'Inter', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            letter-spacing: -0.05px;
+            background: var(--canvas-soft);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            transition: background .2s, color .2s;
         }
 
         /* ── Nav ── */
         nav {
-            background-color: var(--canvas);
-            border-bottom: 1px solid var(--hairline);
-            height: 56px;
-            display: flex;
-            align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            height: 64px;
+            background: rgba(250, 250, 250, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--hairline);
+            display: flex;
+            align-items: center;
         }
 
         .nav-inner {
-            max-width: 1280px;
+            max-width: 1120px;
             width: 100%;
             margin: 0 auto;
             padding: 0 32px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0;
         }
 
-        .nav-logo {
+        .nav-brand {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
+            flex-shrink: 0;
         }
 
         .nav-logo-mark {
-            width: 24px;
-            height: 24px;
-            background: var(--primary);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
         }
 
-        .nav-logo-mark svg {
-            width: 14px;
-            height: 14px;
-            fill: #fff;
+        .nav-logo-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
-        .nav-logo-text {
-            font-size: 14px;
+        .nav-brand-name {
+            font-size: 15px;
             font-weight: 600;
             color: var(--ink);
             letter-spacing: -0.3px;
@@ -95,108 +124,169 @@
             width: 1px;
             height: 18px;
             background: var(--hairline-strong);
+            margin: 0 14px;
+            flex-shrink: 0;
         }
 
-        .nav-label {
+        .nav-page-label {
             font-size: 14px;
             font-weight: 400;
-            color: var(--ink-subtle);
+            color: var(--body);
+            flex: 1;
         }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-icon-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            border: 1px solid var(--hairline);
+            background: var(--canvas);
+            color: var(--body);
+            cursor: pointer;
+            transition: border-color .15s, color .15s, background .15s;
+            flex-shrink: 0;
+            text-decoration: none;
+        }
+
+        .nav-icon-btn:hover {
+            border-color: var(--hairline-strong);
+            color: var(--ink);
+            background: var(--canvas-soft-2);
+        }
+
+        .nav-icon-btn svg { width: 16px; height: 16px; }
+
+        .icon-sun  { display: none; }
+        .icon-moon { display: block; }
+
+        [data-theme="dark"] .icon-sun  { display: block; }
+        [data-theme="dark"] .icon-moon { display: none; }
+
+        .nav-cta {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--on-primary);
+            background: var(--primary);
+            text-decoration: none;
+            padding: 0 12px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            transition: opacity .15s;
+        }
+
+        .nav-cta:hover { opacity: 0.85; }
 
         /* ── Hero ── */
         .hero {
-            max-width: 1280px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 96px 32px 64px;
+            padding: 80px 32px 56px;
         }
 
-        .eyebrow {
+        .hero-eyebrow {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 13px;
+            gap: 8px;
+            background: var(--canvas);
+            border: 1px solid var(--hairline);
+            border-radius: 9999px;
+            padding: 4px 12px;
+            font-size: 12px;
             font-weight: 500;
-            color: var(--primary);
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-            margin-bottom: 16px;
+            color: var(--body);
+            letter-spacing: 0.2px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-card);
         }
 
-        .eyebrow-dot {
+        .hero-eyebrow-dot {
             width: 6px;
             height: 6px;
-            background: var(--semantic-success);
+            background: var(--success);
             border-radius: 9999px;
+            flex-shrink: 0;
         }
 
         h1 {
-            font-size: 56px;
+            font-size: 48px;
             font-weight: 600;
-            line-height: 1.10;
-            letter-spacing: -1.8px;
+            line-height: 1.05;
+            letter-spacing: -2.4px;
             color: var(--ink);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .hero-sub {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 400;
-            line-height: 1.5;
-            letter-spacing: -0.1px;
-            color: var(--ink-muted);
+            line-height: 1.6;
+            color: var(--body);
             max-width: 520px;
         }
 
-        /* ── Search ── */
+        /* ── Search bar ── */
         .search-wrap {
-            max-width: 1280px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 0 32px 48px;
+            padding: 0 32px 40px;
         }
-
-        .search-input {
-            width: 100%;
-            max-width: 420px;
-            background: var(--surface-1);
-            color: var(--ink);
-            border: 1px solid var(--hairline);
-            border-radius: 8px;
-            padding: 8px 12px 8px 36px;
-            font-size: 14px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color .15s;
-            position: relative;
-        }
-
-        .search-input:focus {
-            border-color: var(--hairline-strong);
-            box-shadow: 0 0 0 2px rgba(94, 106, 210, .25);
-        }
-
-        .search-input::placeholder { color: var(--ink-tertiary); }
 
         .search-group {
             position: relative;
-            display: inline-block;
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
         }
 
         .search-icon {
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--ink-tertiary);
+            color: var(--mute);
             pointer-events: none;
+            width: 15px;
+            height: 15px;
         }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            background: var(--canvas);
+            color: var(--ink);
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            padding: 0 12px 0 36px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            box-shadow: var(--shadow-card);
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .search-input:focus {
+            border-color: var(--hairline-strong);
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .search-input::placeholder { color: var(--mute); }
 
         /* ── Grid ── */
         .grid-section {
-            max-width: 1280px;
+            max-width: 1120px;
             margin: 0 auto;
             padding: 0 32px 96px;
+            flex: 1;
         }
 
         .wifi-grid {
@@ -207,19 +297,19 @@
 
         /* ── Card ── */
         .wifi-card {
-            background: var(--surface-1);
-            border: 1px solid var(--hairline);
+            background: var(--canvas);
             border-radius: 12px;
             padding: 24px;
             display: flex;
             flex-direction: column;
             gap: 16px;
-            transition: border-color .15s, background .15s;
+            box-shadow: var(--shadow-card);
+            transition: box-shadow .2s, transform .2s;
         }
 
         .wifi-card:hover {
-            background: var(--surface-2);
-            border-color: var(--hairline-strong);
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
         }
 
         .card-header {
@@ -230,10 +320,10 @@
         }
 
         .card-ssid {
-            font-size: 22px;
-            font-weight: 500;
+            font-size: 20px;
+            font-weight: 600;
             line-height: 1.25;
-            letter-spacing: -0.4px;
+            letter-spacing: -0.6px;
             color: var(--ink);
             word-break: break-all;
         }
@@ -242,7 +332,7 @@
             flex-shrink: 0;
             width: 36px;
             height: 36px;
-            background: var(--surface-3);
+            background: var(--canvas-soft-2);
             border: 1px solid var(--hairline);
             border-radius: 8px;
             display: flex;
@@ -253,7 +343,7 @@
         .wifi-icon svg {
             width: 18px;
             height: 18px;
-            color: var(--primary);
+            color: var(--link);
         }
 
         .card-divider {
@@ -274,89 +364,63 @@
         }
 
         .meta-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--ink-tertiary);
-            letter-spacing: 0.4px;
+            font-family: 'Geist Mono', ui-monospace, monospace;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--mute);
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .meta-value {
             font-size: 14px;
-            color: var(--ink-muted);
+            color: var(--body);
             line-height: 1.5;
         }
 
-        .meta-value.mono {
-            font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
-            font-size: 13px;
-            color: var(--ink);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ── Password reveal ── */
+        /* ── Password ── */
         .password-wrap {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .password-text {
-            font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+            font-family: 'Geist Mono', ui-monospace, monospace;
             font-size: 13px;
             color: var(--ink);
             letter-spacing: 0.5px;
             word-break: break-all;
+            flex: 1;
         }
 
-        .password-text.hidden { letter-spacing: 3px; }
+        .password-text.hidden { letter-spacing: 4px; }
 
-        .btn-reveal {
+        .btn-sm {
             flex-shrink: 0;
-            background: var(--surface-2);
+            background: var(--canvas-soft);
             border: 1px solid var(--hairline);
             border-radius: 6px;
             padding: 3px 8px;
             font-size: 12px;
             font-family: inherit;
             font-weight: 500;
-            color: var(--ink-subtle);
+            color: var(--body);
             cursor: pointer;
-            transition: color .15s, border-color .15s;
+            transition: color .15s, border-color .15s, background .15s;
             white-space: nowrap;
         }
 
-        .btn-reveal:hover {
+        .btn-sm:hover {
             color: var(--ink);
             border-color: var(--hairline-strong);
+            background: var(--canvas-soft-2);
         }
 
-        /* ── Copy btn ── */
-        .btn-copy {
-            flex-shrink: 0;
-            background: transparent;
-            border: 1px solid var(--hairline);
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-size: 12px;
-            font-family: inherit;
-            font-weight: 500;
-            color: var(--ink-subtle);
-            cursor: pointer;
-            transition: color .15s, border-color .15s, background .15s;
-        }
-
-        .btn-copy:hover {
-            color: var(--ink);
-            border-color: var(--hairline-strong);
-            background: var(--surface-2);
-        }
-
-        .btn-copy.copied {
-            color: var(--semantic-success);
-            border-color: var(--semantic-success);
+        .btn-sm.copied {
+            color: var(--success);
+            border-color: var(--success);
         }
 
         /* ── Location badge ── */
@@ -364,28 +428,28 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: var(--surface-2);
+            background: var(--canvas-soft);
             border: 1px solid var(--hairline);
             border-radius: 9999px;
             padding: 2px 10px;
             font-size: 12px;
             font-weight: 400;
-            color: var(--ink-muted);
+            color: var(--body);
             width: fit-content;
         }
 
         .location-badge svg {
             width: 10px;
             height: 10px;
-            color: var(--ink-subtle);
+            color: var(--mute);
         }
 
         /* ── Description ── */
         .card-description {
-            font-size: 14px;
-            color: var(--ink-subtle);
-            line-height: 1.5;
-            padding-top: 4px;
+            font-size: 13px;
+            color: var(--body);
+            line-height: 1.55;
+            padding-top: 12px;
             border-top: 1px solid var(--hairline);
         }
 
@@ -397,7 +461,7 @@
             align-items: center;
             gap: 12px;
             padding: 80px 24px;
-            color: var(--ink-tertiary);
+            color: var(--mute);
             font-size: 14px;
             text-align: center;
         }
@@ -411,27 +475,74 @@
         /* ── Footer ── */
         footer {
             border-top: 1px solid var(--hairline);
-            padding: 32px;
-            text-align: center;
+            padding: 28px 32px;
         }
 
-        footer p {
+        .footer-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .footer-logo-mark {
+            width: 22px;
+            height: 22px;
+        }
+
+        .footer-logo-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            letter-spacing: -0.2px;
+        }
+
+        .footer-copy {
             font-size: 12px;
-            color: var(--ink-tertiary);
+            color: var(--mute);
         }
 
         /* ── Responsive ── */
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
             .wifi-grid { grid-template-columns: repeat(2, 1fr); }
-            h1 { font-size: 40px; letter-spacing: -1.0px; }
+            h1 { font-size: 40px; letter-spacing: -1.8px; }
         }
 
-        @media (max-width: 600px) {
-            .wifi-grid { grid-template-columns: 1fr; }
-            h1 { font-size: 32px; letter-spacing: -0.8px; }
-            .hero, .search-wrap, .grid-section { padding-left: 16px; padding-right: 16px; }
-            .nav-inner { padding: 0 16px; }
-            footer { padding: 24px 16px; }
+        @media (max-width: 640px) {
+            .nav-inner   { padding: 0 16px; }
+            .nav-cta     { font-size: 13px; padding: 0 10px; height: 30px; }
+            .nav-icon-btn { width: 32px; height: 32px; }
+
+            .hero        { padding: 48px 16px 36px; }
+            h1           { font-size: 32px; letter-spacing: -1.2px; }
+            .hero-sub    { font-size: 15px; }
+
+            .search-wrap  { padding: 0 16px 28px; }
+            .search-group { max-width: 100%; }
+
+            .grid-section { padding: 0 16px 56px; }
+            .wifi-grid    { grid-template-columns: 1fr; gap: 12px; }
+            .wifi-card    { padding: 18px; }
+            .card-ssid    { font-size: 17px; }
+
+            footer        { padding: 20px 16px; }
+            .footer-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
     </style>
 </head>
@@ -440,24 +551,37 @@
     <!-- Nav -->
     <nav>
         <div class="nav-inner">
-            <a href="/" class="nav-logo">
+            <a href="/" class="nav-brand">
                 <div class="nav-logo-mark">
-                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 2C4.686 2 2 4.686 2 8s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 10.5A4.5 4.5 0 1 1 8 3.5a4.5 4.5 0 0 1 0 9z"/>
-                    </svg>
+                    <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 </div>
-                <span class="nav-logo-text">BLIS</span>
+                <span class="nav-brand-name">BLIS</span>
             </a>
+
             <div class="nav-divider"></div>
-            <span class="nav-label">Daftar WiFi</span>
+            <span class="nav-page-label">Daftar WiFi</span>
+
+            <div class="nav-actions">
+                <button class="nav-icon-btn" id="theme-toggle" aria-label="Toggle dark mode" type="button">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+
+                <a href="/admin" class="nav-cta">Admin Panel</a>
+            </div>
         </div>
     </nav>
 
     <!-- Hero -->
     <section class="hero">
-        <div class="eyebrow">
-            <span class="eyebrow-dot"></span>
-            Jaringan Aktif
+        <div class="hero-eyebrow">
+            <span class="hero-eyebrow-dot"></span>
+            Jaringan aktif
         </div>
         <h1>Password WiFi</h1>
         <p class="hero-sub">Temukan SSID, lokasi, dan password WiFi yang tersedia di lingkungan SMA dan SMK Budi Luhur.</p>
@@ -466,8 +590,9 @@
     <!-- Search -->
     <div class="search-wrap">
         <div class="search-group">
-            <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 13A6 6 0 1 0 7 1a6 6 0 0 0 0 12zM15 15l-3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="6.5" cy="6.5" r="5.5"/>
+                <path d="M14 14l-3-3"/>
             </svg>
             <input
                 type="text"
@@ -489,7 +614,7 @@
                     <div class="card-header">
                         <span class="card-ssid">{{ $wifi->ssid }}</span>
                         <div class="wifi-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
                                 <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
                                 <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
@@ -506,7 +631,7 @@
                             <span class="meta-label">Lokasi</span>
                             <div>
                                 <span class="location-badge">
-                                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M6 1a3.5 3.5 0 0 1 3.5 3.5C9.5 7.5 6 11 6 11S2.5 7.5 2.5 4.5A3.5 3.5 0 0 1 6 1z"/>
                                         <circle cx="6" cy="4.5" r="1" fill="currentColor" stroke="none"/>
                                     </svg>
@@ -525,19 +650,11 @@
                                         id="pwd-{{ $wifi->id }}"
                                         data-password="{{ $wifi->password }}"
                                     >••••••••••</span>
-                                    <button
-                                        class="btn-reveal"
-                                        onclick="togglePassword({{ $wifi->id }}, this)"
-                                        type="button"
-                                    >Tampilkan</button>
-                                    <button
-                                        class="btn-copy"
-                                        onclick="copyPassword({{ $wifi->id }}, this)"
-                                        type="button"
-                                    >Salin</button>
+                                    <button class="btn-sm" onclick="togglePassword({{ $wifi->id }}, this)" type="button">Tampilkan</button>
+                                    <button class="btn-sm" onclick="copyPassword({{ $wifi->id }}, this)" type="button">Salin</button>
                                 </div>
                             @else
-                                <span class="meta-value" style="color: var(--ink-tertiary);">Tidak ada password</span>
+                                <span class="meta-value" style="color:var(--mute);">Tidak ada password</span>
                             @endif
                         </div>
                     </div>
@@ -549,7 +666,7 @@
                 </article>
             @empty
                 <div class="empty-state">
-                    <svg class="empty-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="empty-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10 24.55a20 20 0 0 1 28 0"/>
                         <path d="M2 17a30 30 0 0 1 44 0"/>
                         <path d="M17 32a10 10 0 0 1 14 0"/>
@@ -563,10 +680,36 @@
 
     <!-- Footer -->
     <footer>
-        <p>© {{ date('Y') }} BLIS — Budi Luhur Integrated System</p>
+        <div class="footer-inner">
+            <a href="/" class="footer-brand">
+                <div class="footer-logo-mark">
+                    <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
+                </div>
+                <span class="footer-brand-name">BLIS</span>
+            </a>
+            <span class="footer-copy">© {{ date('Y') }} Budi Luhur Integrated System</span>
+        </div>
     </footer>
 
     <script>
+        // ── Dark mode ──
+        (function () {
+            const root = document.documentElement;
+            const btn  = document.getElementById('theme-toggle');
+
+            btn.addEventListener('click', function () {
+                const isDark = root.getAttribute('data-theme') === 'dark';
+                if (isDark) {
+                    root.removeAttribute('data-theme');
+                    localStorage.setItem('blis-theme', 'light');
+                } else {
+                    root.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('blis-theme', 'dark');
+                }
+            });
+        })();
+
+        // ── Password toggle ──
         function togglePassword(id, btn) {
             const el = document.getElementById('pwd-' + id);
             if (el.classList.contains('hidden')) {
@@ -580,6 +723,7 @@
             }
         }
 
+        // ── Copy password ──
         function copyPassword(id, btn) {
             const el = document.getElementById('pwd-' + id);
             navigator.clipboard.writeText(el.dataset.password).then(() => {
@@ -592,25 +736,23 @@
             });
         }
 
+        // ── Filter cards ──
         function filterCards(query) {
-            const q = query.toLowerCase().trim();
+            const q     = query.toLowerCase().trim();
             const cards = document.querySelectorAll('.wifi-card');
             let visible = 0;
 
             cards.forEach(card => {
-                const match = !q
-                    || card.dataset.ssid.includes(q)
-                    || card.dataset.location.includes(q);
+                const match = !q || card.dataset.ssid.includes(q) || card.dataset.location.includes(q);
                 card.style.display = match ? '' : 'none';
-                if (match) visible++;
+                if (match) { visible++; }
             });
 
-            // Show/hide empty state
             let emptyEl = document.getElementById('empty-filter');
             if (visible === 0 && q) {
                 if (!emptyEl) {
                     emptyEl = document.createElement('div');
-                    emptyEl.id = 'empty-filter';
+                    emptyEl.id        = 'empty-filter';
                     emptyEl.className = 'empty-state';
                     emptyEl.style.gridColumn = '1 / -1';
                     emptyEl.innerHTML = '<span>Tidak ada hasil untuk "<strong>' + query + '</strong>".</span>';

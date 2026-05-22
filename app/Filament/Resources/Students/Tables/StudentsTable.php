@@ -6,6 +6,7 @@ use App\Filament\Actions\BulkActions\DeleteFromDeviceBulkAction;
 use App\Filament\Actions\BulkActions\PushToDeviceBulkAction;
 use App\Filament\Exports\StudentExporter;
 use App\Filament\Imports\StudentImporter;
+use App\Models\Unit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,7 +16,9 @@ use Filament\Actions\ViewAction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class StudentsTable
 {
@@ -33,13 +36,11 @@ class StudentsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('unit')
+                TextColumn::make('unitModel.display_name')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'SMAKT' => 'info',
-                        'SMKKT' => 'warning',
-                    }),
+                    ->placeholder('-')
+                    ->sortable(['unit_id']),
 
                 TextColumn::make('class')
                     ->label('Kelas')
@@ -57,7 +58,18 @@ class StudentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('unit_id')
+                    ->label('Unit')
+                    ->native(false)
+                    ->options(fn (): array => Unit::query()
+                        ->orderBy('name')
+                        ->orderBy('campus')
+                        ->get(['id', 'name', 'campus'])
+                        ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -67,8 +79,10 @@ class StudentsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-                PushToDeviceBulkAction::make('student'),
-                DeleteFromDeviceBulkAction::make('student'),
+                PushToDeviceBulkAction::make('student')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
+                DeleteFromDeviceBulkAction::make('student')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
                 ImportAction::make()->importer(StudentImporter::class)->color(Color::Blue)->icon(Heroicon::ArrowUpTray)->label('Upload data'),
                 ExportAction::make()->exporter(StudentExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label('Download data'),
             ])

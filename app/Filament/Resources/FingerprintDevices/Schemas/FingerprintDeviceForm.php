@@ -48,6 +48,16 @@ class FingerprintDeviceForm
                             }
                         }),
 
+                    Select::make('units')
+                        ->label('Unit')
+                        ->relationship('units', 'code')
+                        ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                        ->multiple()
+                        ->preload()
+                        ->native(false)
+                        ->searchable()
+                        ->required(),
+
                     Textarea::make('description')
                         ->label('Deskripsi')
                         ->rows(3)

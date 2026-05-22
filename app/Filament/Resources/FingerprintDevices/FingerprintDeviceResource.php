@@ -6,6 +6,7 @@ use App\Filament\Resources\FingerprintDevices\Pages\CreateFingerprintDevice;
 use App\Filament\Resources\FingerprintDevices\Pages\EditFingerprintDevice;
 use App\Filament\Resources\FingerprintDevices\Pages\ListFingerprintDevices;
 use App\Filament\Resources\FingerprintDevices\Pages\ViewFingerprintDevice;
+use App\Filament\Resources\FingerprintDevices\RelationManagers\CommandsRelationManager;
 use App\Filament\Resources\FingerprintDevices\RelationManagers\EmployeesRelationManager;
 use App\Filament\Resources\FingerprintDevices\RelationManagers\StudentsRelationManager;
 use App\Filament\Resources\FingerprintDevices\Schemas\FingerprintDeviceForm;
@@ -16,6 +17,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class FingerprintDeviceResource extends Resource
@@ -51,11 +53,17 @@ class FingerprintDeviceResource extends Resource
         return FingerprintDevicesTable::configure($table);
     }
 
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->isAdmin() ?? false;
+    }
+
     public static function getRelations(): array
     {
         return [
             StudentsRelationManager::class,
             EmployeesRelationManager::class,
+            CommandsRelationManager::class,
         ];
     }
 

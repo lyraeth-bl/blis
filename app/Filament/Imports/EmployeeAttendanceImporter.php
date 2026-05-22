@@ -7,7 +7,9 @@ use App\Models\Employee;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Number;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeAttendanceImporter extends Importer
 {
@@ -64,8 +66,17 @@ class EmployeeAttendanceImporter extends Importer
     {
         $employee = Employee::where('nip', $this->data['nip'])->first();
 
+        if (! $employee) {
+            throw ValidationException::withMessages([
+                'nip' => 'Karyawan tidak ditemukan.',
+            ]);
+        }
+
+        abort_unless(Auth::user()?->canManageEmployees(), 403);
+        abort_unless(Auth::user()?->canAccessUnit($employee->unit_id), 403);
+
         $this->record->attendable_type = Employee::class;
-        $this->record->attendable_id = $employee?->id;
+        $this->record->attendable_id = $employee->id;
         $this->record->source = 'manual';
     }
 

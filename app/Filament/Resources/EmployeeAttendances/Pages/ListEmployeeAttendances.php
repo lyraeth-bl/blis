@@ -11,6 +11,11 @@ class ListEmployeeAttendances extends ListRecords
 {
     protected static string $resource = EmployeeAttendanceResource::class;
 
+    public function getSubheading(): string
+    {
+        return 'Kelola data absensi karyawan dari input manual maupun mesin fingerprint, termasuk status hadir, terlambat, izin, dan tidak hadir.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -3,10 +3,12 @@
 namespace App\Filament\Actions\BulkActions;
 
 use App\Models\FingerprintDevice;
+use App\Services\AdmsCommandService;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class PushToDeviceBulkAction
 {
@@ -19,10 +21,17 @@ class PushToDeviceBulkAction
             ->form([
                 CheckboxList::make('device_ids')
                     ->label('Pilih Device')
-                    ->options(
-                        FingerprintDevice::where('type', $type)
-                            ->pluck('name', 'id')
-                    )
+                    ->options(fn (): array => FingerprintDevice::query()
+                        ->where('type', $type)
+                        ->with('units')
+                        ->orderBy('name')
+                        ->get()
+                        ->mapWithKeys(fn (FingerprintDevice $device): array => [
+                            $device->id => filled($device->unit_display_names)
+                                ? "{$device->name} ({$device->unit_display_names})"
+                                : $device->name,
+                        ])
+                        ->all())
                     ->required(),
             ])
             ->action(function (Collection $records, array $data) use ($type): void {
@@ -36,20 +45,24 @@ class PushToDeviceBulkAction
                     }
 
                     foreach ($records as $record) {
+                        if (! $device->supportsUnit($record->unit_id)) {
+                            $results['failed'][] = $record->name.' (unit berbeda)';
+
+                            continue;
+                        }
+
                         try {
-                            $success = $device->getClient()->setUserInfo(
-                                pin: $record->pin,
-                                name: $record->name,
+                            app(AdmsCommandService::class)->queueUpdateUser(
+                                device: $device,
+                                attendable: $record,
+                                requestedBy: Auth::user(),
                             );
 
-                            if ($success) {
-                                $device->$relation()->syncWithoutDetaching([
-                                    $record->id => ['pushed_at' => now()],
-                                ]);
-                                $results['success'][] = $record->name;
-                            } else {
-                                $results['failed'][] = $record->name;
-                            }
+                            $device->$relation()->syncWithoutDetaching([
+                                $record->id => ['pushed_at' => null],
+                            ]);
+
+                            $results['success'][] = $record->name;
                         } catch (\Throwable $e) {
                             $results['failed'][] = $record->name.' ('.$e->getMessage().')';
                         }
@@ -58,7 +71,7 @@ class PushToDeviceBulkAction
 
                 if (! empty($results['success'])) {
                     Notification::make()
-                        ->title(count($results['success']).' data berhasil di-push')
+                        ->title(count($results['success']).' command push ADMS dibuat')
                         ->success()
                         ->send();
                 }

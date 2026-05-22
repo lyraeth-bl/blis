@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -11,11 +12,28 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
     'nis',
     'name',
     'unit',
+    'unit_id',
     'class',
     'description',
 ])]
 class Student extends Model
 {
+    protected static function booted(): void
+    {
+        static::saving(function (Student $student): void {
+            if ($student->unit_id !== null) {
+                $student->unit = Unit::query()
+                    ->whereKey($student->unit_id)
+                    ->value('code');
+            }
+        });
+    }
+
+    public function unitModel(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class, 'attendable_id')

@@ -20,16 +20,16 @@ class WebsiteInfolist
 
                         TextEntry::make('url')
                             ->label('URL/Domain')
-                            ->url(fn ($record) => $record->url)
+                            ->url(fn($record) => $record->url)
                             ->openUrlInNewTab(),
 
-                        TextEntry::make('username')
-                            ->label('Username/Email'),
+                        // TextEntry::make('username')
+                        //     ->label('Username/Email'),
 
-                        TextEntry::make('password')
-                            ->label('Password')
-                            ->placeholder('-')
-                            ->copyable(),
+                        // TextEntry::make('password')
+                        //     ->label('Password')
+                        //     ->placeholder('-')
+                        //     ->copyable(),
 
                         TextEntry::make('category')
                             ->label('Kategori')

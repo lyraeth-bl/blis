@@ -4,12 +4,14 @@ namespace App\Filament\Resources\Students\RelationManagers;
 
 use App\Filament\Resources\Students\StudentResource;
 use App\Models\FingerprintDevice;
+use App\Services\AdmsCommandService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class FingerprintDevicesRelationManager extends RelationManager
 {
@@ -30,6 +32,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                 TextColumn::make('location')
                     ->label('Lokasi'),
 
+                TextColumn::make('units.display_name')
+                    ->label('Unit')
+                    ->badge()
+                    ->separator(', ')
+                    ->placeholder('-'),
+
                 TextColumn::make('ip_address')
                     ->label('IP Address'),
 
@@ -40,16 +48,18 @@ class FingerprintDevicesRelationManager extends RelationManager
             ])
             ->headerActions([
                 Action::make('push_to_devices')
-                    ->label('Push ke Device')
+                    ->label('Push ADMS ke Device')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('success')
                     ->form([
                         CheckboxList::make('device_ids')
                             ->label('Pilih Device')
-                            ->options(
-                                FingerprintDevice::where('type', 'student')
-                                    ->pluck('name', 'id')
-                            )
+                            ->options(fn (): array => FingerprintDevice::query()
+                                ->where('type', 'student')
+                                ->whereHas('units', fn ($query) => $query->whereKey($this->getOwnerRecord()->unit_id))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->required(),
                     ])
                     ->action(function (array $data): void {
@@ -62,20 +72,24 @@ class FingerprintDevicesRelationManager extends RelationManager
                                 continue;
                             }
 
+                            if (! $device->supportsUnit($student->unit_id)) {
+                                $results['failed'][] = $device->name.' (unit berbeda)';
+
+                                continue;
+                            }
+
                             try {
-                                $success = $device->getClient()->setUserInfo(
-                                    pin: $student->pin,
-                                    name: $student->name,
+                                app(AdmsCommandService::class)->queueUpdateUser(
+                                    device: $device,
+                                    attendable: $student,
+                                    requestedBy: Auth::user(),
                                 );
 
-                                if ($success) {
-                                    $device->students()->syncWithoutDetaching([
-                                        $student->id => ['pushed_at' => now()],
-                                    ]);
-                                    $results['success'][] = $device->name;
-                                } else {
-                                    $results['failed'][] = $device->name;
-                                }
+                                $device->students()->syncWithoutDetaching([
+                                    $student->id => ['pushed_at' => null],
+                                ]);
+
+                                $results['success'][] = $device->name;
                             } catch (\Throwable $e) {
                                 $results['failed'][] = $device->name.' ('.$e->getMessage().')';
                             }
@@ -83,7 +97,7 @@ class FingerprintDevicesRelationManager extends RelationManager
 
                         if (! empty($results['success'])) {
                             Notification::make()
-                                ->title('Berhasil push ke: '.implode(', ', $results['success']))
+                                ->title('Command push ADMS dibuat untuk: '.implode(', ', $results['success']))
                                 ->success()
                                 ->send();
                         }
@@ -105,21 +119,42 @@ class FingerprintDevicesRelationManager extends RelationManager
                     ->action(function (FingerprintDevice $record): void {
                         $student = $this->getOwnerRecord();
                         try {
-                            $success = $record->getClient()->deleteUser($student->pin);
+                            app(AdmsCommandService::class)->queueDeleteUser(
+                                device: $record,
+                                attendable: $student,
+                                requestedBy: Auth::user(),
+                            );
 
-                            if ($success) {
-                                $record->students()->detach($student->id);
+                            Notification::make()
+                                ->title("Command hapus dari {$record->name} dibuat")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error: '.$e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
-                                Notification::make()
-                                    ->title("Berhasil hapus dari {$record->name}")
-                                    ->success()
-                                    ->send();
-                            } else {
-                                Notification::make()
-                                    ->title("Gagal hapus dari {$record->name}")
-                                    ->danger()
-                                    ->send();
-                            }
+                Action::make('query_user')
+                    ->label('Query User')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->color('gray')
+                    ->action(function (FingerprintDevice $record): void {
+                        $student = $this->getOwnerRecord();
+
+                        try {
+                            app(AdmsCommandService::class)->queueQueryUser(
+                                device: $record,
+                                attendable: $student,
+                                requestedBy: Auth::user(),
+                            );
+
+                            Notification::make()
+                                ->title("Command query ke {$record->name} dibuat")
+                                ->success()
+                                ->send();
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error: '.$e->getMessage())

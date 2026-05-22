@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -12,10 +13,16 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
     'name',
     'email',
     'position',
+    'unit_id',
     'description',
 ])]
 class Employee extends Model
 {
+    public function unitModel(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class, 'attendable_id')

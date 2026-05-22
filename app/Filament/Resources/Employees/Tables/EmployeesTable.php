@@ -6,6 +6,7 @@ use App\Filament\Actions\BulkActions\DeleteFromDeviceBulkAction;
 use App\Filament\Actions\BulkActions\PushToDeviceBulkAction;
 use App\Filament\Exports\EmployeeExporter;
 use App\Filament\Imports\EmployeeImporter;
+use App\Models\Unit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,7 +16,9 @@ use Filament\Actions\ViewAction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeesTable
 {
@@ -41,6 +44,12 @@ class EmployeesTable
                     ->label('Jabatan')
                     ->searchable(),
 
+                TextColumn::make('unitModel.display_name')
+                    ->label('Unit')
+                    ->badge()
+                    ->placeholder('-')
+                    ->sortable(['unit_id']),
+
                 TextColumn::make('fingerprintDevices.name')
                     ->label('Terdaftar di Device')
                     ->badge()
@@ -53,7 +62,18 @@ class EmployeesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('unit_id')
+                    ->label('Unit')
+                    ->native(false)
+                    ->options(fn (): array => Unit::query()
+                        ->orderBy('name')
+                        ->orderBy('campus')
+                        ->get(['id', 'name', 'campus'])
+                        ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -63,8 +83,10 @@ class EmployeesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-                PushToDeviceBulkAction::make('employee'),
-                DeleteFromDeviceBulkAction::make('employee'),
+                PushToDeviceBulkAction::make('employee')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
+                DeleteFromDeviceBulkAction::make('employee')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
                 ImportAction::make()->importer(EmployeeImporter::class)->color(Color::Blue)->icon(Heroicon::ArrowUpTray)->label('Upload data'),
                 ExportAction::make()->exporter(EmployeeExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label('Download data'),
             ])
