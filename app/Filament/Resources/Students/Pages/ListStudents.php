@@ -10,6 +10,11 @@ class ListStudents extends ListRecords
 {
     protected static string $resource = StudentResource::class;
 
+    public function getSubheading(): string
+    {
+        return 'Kelola data siswa, unit, kelas, dan identitas yang dipakai untuk absensi serta distribusi ke mesin fingerprint.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

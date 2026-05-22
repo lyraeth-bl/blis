@@ -3,10 +3,13 @@
 namespace App\Filament\Imports;
 
 use App\Models\Employee;
+use App\Models\Unit;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Number;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeImporter extends Importer
 {
@@ -25,6 +28,14 @@ class EmployeeImporter extends Importer
                 ->rules(['email', 'max:255']),
             ImportColumn::make('position')
                 ->rules(['max:255']),
+            ImportColumn::make('unit')
+                ->requiredMapping()
+                ->rules(['required', 'exists:units,code'])
+                ->fillRecordUsing(function (Employee $record, ?string $state): void {
+                    $record->unit_id = filled($state)
+                        ? Unit::query()->where('code', $state)->value('id')
+                        : null;
+                }),
             ImportColumn::make('description'),
         ];
     }
@@ -34,6 +45,18 @@ class EmployeeImporter extends Importer
         return Employee::firstOrNew([
             'nip' => $this->data['nip'],
         ]);
+    }
+
+    protected function beforeSave(): void
+    {
+        abort_unless(Auth::user()?->canManageEmployees(), 403);
+        abort_unless(Auth::user()?->canAccessUnit($this->record->unit_id), 403);
+
+        if ($this->record->exists && ! Auth::user()?->canAccessUnit($this->record->getOriginal('unit_id'))) {
+            throw ValidationException::withMessages([
+                'nip' => 'Data karyawan ini berada di luar unit yang boleh kamu akses.',
+            ]);
+        }
     }
 
     public static function getCompletedNotificationBody(Import $import): string

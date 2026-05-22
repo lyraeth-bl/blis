@@ -11,6 +11,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class SpoPostLogResource extends Resource
@@ -42,6 +43,11 @@ class SpoPostLogResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function getPages(): array

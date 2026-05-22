@@ -4,6 +4,7 @@ namespace App\Filament\Resources\EmployeeAttendances\Tables;
 
 use App\Filament\Exports\EmployeeAttendanceExporter;
 use App\Filament\Imports\EmployeeAttendanceImporter;
+use App\Models\Attendance;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -35,6 +36,11 @@ class EmployeeAttendancesTable
                 TextColumn::make('attendable.position')
                     ->label('Jabatan')
                     ->placeholder('-'),
+
+                TextColumn::make('unit')
+                    ->label('Unit')
+                    ->badge()
+                    ->state(fn (Attendance $record): string => $record->attendable?->unitModel?->display_name ?? '-'),
 
                 TextColumn::make('date')
                     ->label('Tanggal')

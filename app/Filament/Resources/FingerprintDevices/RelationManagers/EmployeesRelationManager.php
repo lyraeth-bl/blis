@@ -52,6 +52,11 @@ class EmployeesRelationManager extends RelationManager
                     ->label('Jabatan')
                     ->searchable(),
 
+                TextColumn::make('unitModel.display_name')
+                    ->label('Unit')
+                    ->badge()
+                    ->placeholder('-'),
+
                 TextColumn::make('pivot.pushed_at')
                     ->label('Dikirim ke Device')
                     ->dateTime()
@@ -68,11 +73,22 @@ class EmployeesRelationManager extends RelationManager
                     ->form([
                         Select::make('employee_id')
                             ->label('Karyawan')
-                            ->options(Employee::query()->pluck('name', 'id'))
+                            ->options(fn (): array => Employee::query()
+                                ->whereIn('unit_id', $this->getOwnerRecord()->units()->pluck('units.id'))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->searchable()
                             ->required(),
                     ])
                     ->action(function (array $data): void {
+                        $employee = Employee::query()->find($data['employee_id']);
+
+                        abort_unless(
+                            $employee !== null && $this->getOwnerRecord()->supportsUnit($employee->unit_id),
+                            403,
+                        );
+
                         $this->getOwnerRecord()->employees()->syncWithoutDetaching([
                             $data['employee_id'] => ['pushed_at' => null],
                         ]);

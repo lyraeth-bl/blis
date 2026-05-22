@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\FingerprintDevices\Tables;
 
+use App\Models\FingerprintDevice;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class FingerprintDevicesTable
@@ -25,6 +27,12 @@ class FingerprintDevicesTable
                 TextColumn::make('location')
                     ->label('Lokasi')
                     ->searchable(),
+
+                TextColumn::make('units')
+                    ->label('Unit')
+                    ->state(fn (FingerprintDevice $record): string => $record->unit_display_names)
+                    ->badge()
+                    ->placeholder('-'),
 
                 TextColumn::make('serial_number')
                     ->label('Serial ADMS')
@@ -70,7 +78,19 @@ class FingerprintDevicesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('units')
+                    ->label('Unit')
+                    ->relationship('units', 'code')
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->display_name)
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('type')
+                    ->label('Tipe')
+                    ->options([
+                        'student' => 'Siswa',
+                        'employee' => 'Karyawan',
+                    ]),
             ])
             ->recordActions([
                 ViewAction::make(),

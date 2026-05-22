@@ -15,6 +15,8 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class StudentResource extends Resource
@@ -50,6 +52,23 @@ class StudentResource extends Resource
         return StudentsTable::configure($table);
     }
 
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->canManageStudents() ?? false;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        if ($user === null || $user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereIn('unit_id', $user->accessibleUnitIds());
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -59,7 +78,7 @@ class StudentResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getPages(): array

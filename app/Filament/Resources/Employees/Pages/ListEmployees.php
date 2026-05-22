@@ -10,6 +10,11 @@ class ListEmployees extends ListRecords
 {
     protected static string $resource = EmployeeResource::class;
 
+    public function getSubheading(): string
+    {
+        return 'Kelola profil karyawan, unit kerja, jabatan, dan data yang digunakan untuk sinkronisasi absensi fingerprint.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -16,6 +16,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class FingerprintDeviceResource extends Resource
@@ -49,6 +50,11 @@ class FingerprintDeviceResource extends Resource
     public static function table(Table $table): Table
     {
         return FingerprintDevicesTable::configure($table);
+    }
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->isAdmin() ?? false;
     }
 
     public static function getRelations(): array

@@ -30,6 +30,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                 TextColumn::make('location')
                     ->label('Lokasi'),
 
+                TextColumn::make('units.display_name')
+                    ->label('Unit')
+                    ->badge()
+                    ->separator(', ')
+                    ->placeholder('-'),
+
                 TextColumn::make('ip_address')
                     ->label('IP Address'),
 
@@ -46,10 +52,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                     ->form([
                         CheckboxList::make('device_ids')
                             ->label('Pilih Device')
-                            ->options(
-                                FingerprintDevice::where('type', 'student')
-                                    ->pluck('name', 'id')
-                            )
+                            ->options(fn (): array => FingerprintDevice::query()
+                                ->where('type', 'student')
+                                ->whereHas('units', fn ($query) => $query->whereKey($this->getOwnerRecord()->unit_id))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
                             ->required(),
                     ])
                     ->action(function (array $data): void {
@@ -59,6 +67,12 @@ class FingerprintDevicesRelationManager extends RelationManager
                         foreach ($data['device_ids'] as $deviceId) {
                             $device = FingerprintDevice::find($deviceId);
                             if (! $device) {
+                                continue;
+                            }
+
+                            if (! $device->supportsUnit($student->unit_id)) {
+                                $results['failed'][] = $device->name.' (unit berbeda)';
+
                                 continue;
                             }
 

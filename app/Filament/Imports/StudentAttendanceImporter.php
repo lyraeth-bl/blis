@@ -7,7 +7,9 @@ use App\Models\Student;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Number;
+use Illuminate\Validation\ValidationException;
 
 class StudentAttendanceImporter extends Importer
 {
@@ -64,8 +66,17 @@ class StudentAttendanceImporter extends Importer
     {
         $student = Student::where('nis', $this->data['nis'])->first();
 
+        if (! $student) {
+            throw ValidationException::withMessages([
+                'nis' => 'Siswa tidak ditemukan.',
+            ]);
+        }
+
+        abort_unless(Auth::user()?->canManageStudents(), 403);
+        abort_unless(Auth::user()?->canAccessUnit($student->unit_id), 403);
+
         $this->record->attendable_type = Student::class;
-        $this->record->attendable_id = $student?->id;
+        $this->record->attendable_id = $student->id;
         $this->record->source = 'manual';
     }
 

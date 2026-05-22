@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class StudentAttendanceResource extends Resource
@@ -45,8 +46,24 @@ class StudentAttendanceResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->where('attendable_type', Student::class);
+        $user = Auth::user();
+
+        if ($user === null || $user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->whereHasMorph(
+            'attendable',
+            [Student::class],
+            fn (Builder $query): Builder => $query->whereIn('unit_id', $user->accessibleUnitIds()),
+        );
+    }
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()?->canManageStudents() ?? false;
     }
 
     public static function form(Schema $schema): Schema

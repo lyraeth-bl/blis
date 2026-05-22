@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\FingerprintClient;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Carbon;
@@ -25,9 +26,33 @@ use Illuminate\Support\Carbon;
 ])]
 class FingerprintDevice extends Model
 {
+    public function units(): BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class)
+            ->withTimestamps();
+    }
+
+    public function supportsUnit(?int $unitId): bool
+    {
+        if ($unitId === null) {
+            return false;
+        }
+
+        return $this->units()
+            ->whereKey($unitId)
+            ->exists();
+    }
+
+    public function getUnitDisplayNamesAttribute(): string
+    {
+        return $this->units
+            ->pluck('display_name')
+            ->join(', ');
+    }
+
     public function getConnectionStatusAttribute(): string
     {
-        if (!$this->last_seen_at instanceof Carbon) {
+        if (! $this->last_seen_at instanceof Carbon) {
             return 'inactive';
         }
 

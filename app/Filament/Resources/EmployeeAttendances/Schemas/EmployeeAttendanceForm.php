@@ -10,6 +10,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeAttendanceForm
 {
@@ -20,7 +21,14 @@ class EmployeeAttendanceForm
                 Section::make('Data Karyawan')->schema([
                     Select::make('attendable_id')
                         ->label('Karyawan')
-                        ->options(Employee::query()->pluck('name', 'id'))
+                        ->options(fn (): array => Employee::query()
+                            ->when(
+                                ! Auth::user()?->isAdmin(),
+                                fn ($query) => $query->whereIn('unit_id', Auth::user()?->accessibleUnitIds() ?? []),
+                            )
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all())
                         ->searchable()
                         ->native(false)
                         ->required(),

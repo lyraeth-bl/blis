@@ -12,6 +12,11 @@ class ListStudentAttendances extends ListRecords
 {
     protected static string $resource = StudentAttendanceResource::class;
 
+    public function getSubheading(): string
+    {
+        return 'Kelola data absensi siswa dari scan QR, input manual, dan mesin fingerprint dalam satu daftar.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

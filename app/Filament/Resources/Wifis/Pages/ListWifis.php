@@ -11,6 +11,11 @@ class ListWifis extends ListRecords
 {
     protected static string $resource = WifiResource::class;
 
+    public function getSubheading(): string
+    {
+        return 'Kelola informasi jaringan wifi, akses router, lokasi, dan kredensial admin yang dibutuhkan operasional.';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -16,6 +16,7 @@ use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class StudentsTable
 {
@@ -33,13 +34,11 @@ class StudentsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('unit')
+                TextColumn::make('unitModel.display_name')
                     ->label('Unit')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'SMAKT' => 'info',
-                        'SMKKT' => 'warning',
-                    }),
+                    ->placeholder('-')
+                    ->sortable(['unit_id']),
 
                 TextColumn::make('class')
                     ->label('Kelas')
@@ -67,8 +66,10 @@ class StudentsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-                PushToDeviceBulkAction::make('student'),
-                DeleteFromDeviceBulkAction::make('student'),
+                PushToDeviceBulkAction::make('student')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
+                DeleteFromDeviceBulkAction::make('student')
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
                 ImportAction::make()->importer(StudentImporter::class)->color(Color::Blue)->icon(Heroicon::ArrowUpTray)->label('Upload data'),
                 ExportAction::make()->exporter(StudentExporter::class)->color(Color::Amber)->icon(Heroicon::ArrowDownTray)->label('Download data'),
             ])
