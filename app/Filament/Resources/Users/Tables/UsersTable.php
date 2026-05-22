@@ -33,6 +33,7 @@ class UsersTable
                         UserRole::Admin => 'danger',
                         UserRole::Hrd => 'warning',
                         UserRole::Tu => 'info',
+                        UserRole::Staff => 'info',
                     })
                     ->sortable(),
                 TextColumn::make('is_active')

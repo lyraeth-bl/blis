@@ -31,7 +31,7 @@ class WebsitesTable
                     ->label('URL/Domain')
                     ->searchable()
                     ->sortable()
-                    ->url(fn(Website $record): ?string => $record->url)
+                    ->url(fn (Website $record): ?string => $record->url)
                     ->openUrlInNewTab(),
 
                 // TextColumn::make('username')
@@ -39,6 +39,15 @@ class WebsitesTable
 
                 TextColumn::make('category')
                     ->label('Kategori')
+                    ->badge(),
+
+                TextColumn::make('unitModel.display_name')
+                    ->label('Unit')
+                    ->placeholder('Semua unit'),
+
+                TextColumn::make('is_private')
+                    ->label('Visibilitas')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Private' : 'Public')
                     ->badge(),
 
                 TextColumn::make('created_at')

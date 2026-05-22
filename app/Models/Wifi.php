@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'ssid',
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
     'admin_password',
     'link',
     'description',
+    'unit_id',
+    'is_private',
 ])]
 class Wifi extends Model
 {
@@ -26,6 +29,12 @@ class Wifi extends Model
         return [
             'password' => 'encrypted',
             'admin_password' => 'encrypted',
+            'is_private' => 'boolean',
         ];
+    }
+
+    public function unitModel(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 }

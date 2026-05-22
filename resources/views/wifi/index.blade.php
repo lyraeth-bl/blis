@@ -187,6 +187,104 @@
 
         .nav-cta:hover { opacity: 0.85; }
 
+        .nav-logout {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
+            background: var(--canvas);
+            padding: 0 12px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            border: 1px solid var(--hairline);
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color .15s, background .15s;
+        }
+
+        .nav-logout:hover {
+            border-color: var(--hairline-strong);
+            background: var(--canvas-soft-2);
+        }
+
+        .unit-filter {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 32px 28px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .unit-filter-link {
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--hairline);
+            border-radius: 9999px;
+            padding: 0 12px;
+            background: var(--canvas);
+            color: var(--body);
+            font-size: 13px;
+            text-decoration: none;
+            transition: border-color .15s, color .15s, background .15s;
+        }
+
+        .unit-filter-link:hover,
+        .unit-filter-link.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--on-primary);
+        }
+
+        .login-notice {
+            max-width: 1120px;
+            margin: 0 auto 24px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            background: color-mix(in srgb, var(--canvas) 78%, transparent);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-card);
+        }
+
+        .login-notice-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 2px;
+        }
+
+        .login-notice-text {
+            font-size: 13px;
+            line-height: 20px;
+            color: var(--body);
+        }
+
+        .login-notice-link {
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            flex-shrink: 0;
+            border-radius: 9999px;
+            padding: 0 14px;
+            background: var(--primary);
+            color: var(--on-primary);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: opacity .15s;
+        }
+
+        .login-notice-link:hover { opacity: .86; }
+
         /* ── Hero ── */
         .hero {
             max-width: 1120px;
@@ -535,6 +633,12 @@
 
             .search-wrap  { padding: 0 16px 28px; }
             .search-group { max-width: 100%; }
+            .unit-filter  { padding: 0 16px 24px; }
+            .login-notice {
+                align-items: flex-start;
+                flex-direction: column;
+                margin: 0 16px 24px;
+            }
 
             .grid-section { padding: 0 16px 56px; }
             .wifi-grid    { grid-template-columns: 1fr; gap: 12px; }
@@ -551,7 +655,7 @@
     <!-- Nav -->
     <nav>
         <div class="nav-inner">
-            <a href="/" class="nav-brand">
+            <a href="{{ route('home') }}" class="nav-brand">
                 <div class="nav-logo-mark">
                     <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 </div>
@@ -572,7 +676,18 @@
                     </svg>
                 </button>
 
-                <a href="/admin" class="nav-cta">Admin Panel</a>
+                @auth
+                    @if (auth()->user()?->canAccessBackOffice())
+                        <a href="/admin" class="nav-cta">Admin Panel</a>
+                    @endif
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="nav-logout">Keluar</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="nav-cta">Login</a>
+                @endauth
             </div>
         </div>
     </nav>
@@ -604,6 +719,29 @@
             >
         </div>
     </div>
+
+    <div class="unit-filter" aria-label="Filter unit">
+        <a href="{{ route('wifi.index') }}" class="unit-filter-link {{ $selectedUnitId === null ? 'active' : '' }}">
+            Semua unit
+        </a>
+
+        @foreach ($units as $unit)
+            <a href="{{ route('wifi.index', ['unit' => $unit->id]) }}"
+                class="unit-filter-link {{ $selectedUnitId === $unit->id ? 'active' : '' }}">
+                {{ $unit->display_name }}
+            </a>
+        @endforeach
+    </div>
+
+    @guest
+        <div class="login-notice">
+            <div>
+                <p class="login-notice-title">Login untuk akses lengkap</p>
+                <p class="login-notice-text">Daftar ini hanya menampilkan WiFi publik. Masuk dengan akun Google staff untuk melihat WiFi private sesuai unit.</p>
+            </div>
+            <a href="{{ route('login') }}" class="login-notice-link">Login Google</a>
+        </div>
+    @endguest
 
     <!-- Grid -->
     <div class="grid-section">
@@ -637,6 +775,16 @@
                                     </svg>
                                     {{ $wifi->location }}
                                 </span>
+                                @if ($wifi->unitModel)
+                                    <span class="location-badge">
+                                        {{ $wifi->unitModel->display_name }}
+                                    </span>
+                                @endif
+                                @if ($wifi->is_private)
+                                    <span class="location-badge">
+                                        Private
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -681,7 +829,7 @@
     <!-- Footer -->
     <footer>
         <div class="footer-inner">
-            <a href="/" class="footer-brand">
+            <a href="{{ route('home') }}" class="footer-brand">
                 <div class="footer-logo-mark">
                     <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 </div>

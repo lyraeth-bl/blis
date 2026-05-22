@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Attendance;
 use App\Models\FingerprintDevice;
 use App\Models\Student;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
@@ -19,9 +21,9 @@ class QrScanService
      *
      * @return array{ student: Student, tipe: string, waktu: string, status: string, qr_mode: string }
      *
-     * @throws \RuntimeException
+     * @throws AuthorizationException|\RuntimeException
      */
-    public function process(string $token): array
+    public function process(string $token, ?User $user = null): array
     {
         // Auto-detect mode dari format token
         // Dynamic → "NIS:timestamp:hmac" (ada 2 titik dua)
@@ -38,6 +40,10 @@ class QrScanService
 
         if (! $student) {
             throw new \RuntimeException("Siswa dengan NIS {$nis} tidak ditemukan.");
+        }
+
+        if ($user !== null && ! $user->canScanQrAttendance($student->unit_id)) {
+            throw new AuthorizationException('Anda tidak memiliki jadwal piket aktif untuk unit siswa ini.');
         }
 
         $now = Carbon::now();

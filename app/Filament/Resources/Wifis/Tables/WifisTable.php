@@ -39,6 +39,15 @@ class WifisTable
                     ->label('Tipe Router')
                     ->badge(),
 
+                TextColumn::make('unitModel.display_name')
+                    ->label('Unit')
+                    ->placeholder('Semua unit'),
+
+                TextColumn::make('is_private')
+                    ->label('Visibilitas')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Private' : 'Public')
+                    ->badge(),
+
                 TextColumn::make('link')
                     ->label('Link Admin')
                     ->url(fn (Wifi $record): ?string => $record->link)

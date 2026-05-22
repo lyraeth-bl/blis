@@ -28,6 +28,15 @@ class WifiInfolist
                             ->label('Tipe Router')
                             ->badge(),
 
+                        TextEntry::make('unitModel.display_name')
+                            ->label('Unit')
+                            ->placeholder('Semua unit'),
+
+                        TextEntry::make('is_private')
+                            ->label('Visibilitas')
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Private' : 'Public')
+                            ->badge(),
+
                         TextEntry::make('password')
                             ->label('Password Wifi')
                             ->placeholder('-')
