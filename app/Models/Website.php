@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
     'password',
     'category',
     'description',
+    'is_private',
 ])]
 class Website extends Model
 {
@@ -21,7 +22,8 @@ class Website extends Model
     protected function casts(): array
     {
         return [
-            'password' => 'encrypted',
+            'password'   => 'encrypted',
+            'is_private' => 'boolean',
         ];
     }
 }
