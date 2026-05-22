@@ -96,6 +96,11 @@ class FingerprintDevice extends Model
         return $this->hasMany(DeviceRawLog::class);
     }
 
+    public function commands(): HasMany
+    {
+        return $this->hasMany(FingerprintDeviceCommand::class);
+    }
+
     public function getClient(): FingerprintClient
     {
         return new FingerprintClient(

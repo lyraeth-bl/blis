@@ -37,6 +37,9 @@ Route::middleware('throttle:120,1')->group(function (): void {
 
     Route::get('/iclock/getrequest', [AdmsController::class, 'getRequest'])
         ->name('adms.get-request');
+
+    Route::post('/iclock/devicecmd', [AdmsController::class, 'commandReply'])
+        ->name('adms.command-reply');
 });
 
 Route::get('/wifi', [WifiController::class, 'index'])->name('wifi.index');

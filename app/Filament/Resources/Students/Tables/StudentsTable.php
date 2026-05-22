@@ -6,6 +6,7 @@ use App\Filament\Actions\BulkActions\DeleteFromDeviceBulkAction;
 use App\Filament\Actions\BulkActions\PushToDeviceBulkAction;
 use App\Filament\Exports\StudentExporter;
 use App\Filament\Imports\StudentImporter;
+use App\Models\Unit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +16,7 @@ use Filament\Actions\ViewAction;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,7 +58,18 @@ class StudentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('unit_id')
+                    ->label('Unit')
+                    ->native(false)
+                    ->options(fn (): array => Unit::query()
+                        ->orderBy('name')
+                        ->orderBy('campus')
+                        ->get(['id', 'name', 'campus'])
+                        ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
             ])
             ->recordActions([
                 ViewAction::make(),

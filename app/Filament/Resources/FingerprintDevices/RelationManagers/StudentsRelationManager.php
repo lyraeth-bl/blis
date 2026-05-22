@@ -3,14 +3,18 @@
 namespace App\Filament\Resources\FingerprintDevices\RelationManagers;
 
 use App\Models\Student;
+use App\Services\AdmsCommandService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class StudentsRelationManager extends RelationManager
 {
@@ -92,32 +96,26 @@ class StudentsRelationManager extends RelationManager
             ])
             ->recordActions([
                 Action::make('push')
-                    ->label('Push')
+                    ->label('Push ADMS')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->color('success')
                     ->action(function (Student $record): void {
                         $device = $this->getOwnerRecord();
                         try {
-                            $success = $device->getClient()->setUserInfo(
-                                pin: $record->pin,
-                                name: $record->name,
+                            app(AdmsCommandService::class)->queueUpdateUser(
+                                device: $device,
+                                attendable: $record,
+                                requestedBy: Auth::user(),
                             );
 
-                            if ($success) {
-                                $device->students()->updateExistingPivot($record->id, [
-                                    'pushed_at' => now(),
-                                ]);
+                            $device->students()->syncWithoutDetaching([
+                                $record->id => ['pushed_at' => null],
+                            ]);
 
-                                Notification::make()
-                                    ->title("Berhasil push {$record->name}")
-                                    ->success()
-                                    ->send();
-                            } else {
-                                Notification::make()
-                                    ->title("Gagal push {$record->name}")
-                                    ->danger()
-                                    ->send();
-                            }
+                            Notification::make()
+                                ->title("Command push {$record->name} dibuat")
+                                ->success()
+                                ->send();
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error: '.$e->getMessage())
@@ -134,21 +132,124 @@ class StudentsRelationManager extends RelationManager
                     ->action(function (Student $record): void {
                         $device = $this->getOwnerRecord();
                         try {
-                            $success = $device->getClient()->deleteUser($record->pin);
+                            app(AdmsCommandService::class)->queueDeleteUser(
+                                device: $device,
+                                attendable: $record,
+                                requestedBy: Auth::user(),
+                            );
 
-                            if ($success) {
-                                $device->students()->detach($record->id);
+                            Notification::make()
+                                ->title("Command hapus {$record->name} dibuat")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error: '.$e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
 
-                                Notification::make()
-                                    ->title("Berhasil hapus {$record->name} dari mesin")
-                                    ->success()
-                                    ->send();
-                            } else {
-                                Notification::make()
-                                    ->title("Gagal hapus {$record->name}")
-                                    ->danger()
-                                    ->send();
-                            }
+                Action::make('query_user')
+                    ->label('Query User')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->color('gray')
+                    ->action(function (Student $record): void {
+                        try {
+                            app(AdmsCommandService::class)->queueQueryUser(
+                                device: $this->getOwnerRecord(),
+                                attendable: $record,
+                                requestedBy: Auth::user(),
+                            );
+
+                            Notification::make()
+                                ->title("Command query {$record->name} dibuat")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error: '.$e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Action::make('push_fingerprint_template')
+                    ->label('Upload Finger')
+                    ->icon('heroicon-o-finger-print')
+                    ->color('info')
+                    ->form([
+                        TextInput::make('fid')
+                            ->label('FID')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->required(),
+
+                        Select::make('valid')
+                            ->label('Valid')
+                            ->options([
+                                '1' => 'Valid',
+                                '0' => 'Tidak valid',
+                            ])
+                            ->default('1')
+                            ->required(),
+
+                        Textarea::make('tmp')
+                            ->label('TMP Base64')
+                            ->rows(6)
+                            ->required(),
+                    ])
+                    ->action(function (Student $record, array $data): void {
+                        try {
+                            app(AdmsCommandService::class)->queueUpdateFingerprintTemplate(
+                                device: $this->getOwnerRecord(),
+                                attendable: $record,
+                                fingerId: (int) $data['fid'],
+                                template: (string) $data['tmp'],
+                                valid: (string) $data['valid'] === '1',
+                                requestedBy: Auth::user(),
+                            );
+
+                            Notification::make()
+                                ->title("Command upload finger {$record->name} dibuat")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Error: '.$e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Action::make('query_fingerprint_template')
+                    ->label('Query Finger')
+                    ->icon('heroicon-o-finger-print')
+                    ->color('gray')
+                    ->form([
+                        TextInput::make('fid')
+                            ->label('FID')
+                            ->numeric()
+                            ->minValue(0),
+                    ])
+                    ->action(function (Student $record, array $data): void {
+                        try {
+                            $fingerId = filled($data['fid'] ?? null)
+                                ? (int) $data['fid']
+                                : null;
+
+                            app(AdmsCommandService::class)->queueQueryFingerprintTemplate(
+                                device: $this->getOwnerRecord(),
+                                attendable: $record,
+                                fingerId: $fingerId,
+                                requestedBy: Auth::user(),
+                            );
+
+                            Notification::make()
+                                ->title("Command query finger {$record->name} dibuat")
+                                ->success()
+                                ->send();
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error: '.$e->getMessage())
