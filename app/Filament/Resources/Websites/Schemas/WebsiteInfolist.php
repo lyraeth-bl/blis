@@ -20,7 +20,7 @@ class WebsiteInfolist
 
                         TextEntry::make('url')
                             ->label('URL/Domain')
-                            ->url(fn($record) => $record->url)
+                            ->url(fn ($record) => $record->url)
                             ->openUrlInNewTab(),
 
                         // TextEntry::make('username')

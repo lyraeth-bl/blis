@@ -31,7 +31,7 @@ class WebsitesTable
                     ->label('URL/Domain')
                     ->searchable()
                     ->sortable()
-                    ->url(fn(Website $record): ?string => $record->url)
+                    ->url(fn (Website $record): ?string => $record->url)
                     ->openUrlInNewTab(),
 
                 // TextColumn::make('username')

@@ -79,6 +79,54 @@ class AdmsCommandService
         );
     }
 
+    public function queueQueryUsers(FingerprintDevice $device, ?User $requestedBy = null): FingerprintDeviceCommand
+    {
+        return $this->createCommand(
+            device: $device,
+            action: FingerprintDeviceCommand::ACTION_QUERY_USERS,
+            command: 'DATA QUERY USERINFO',
+            requestedBy: $requestedBy,
+            payload: ['all' => true],
+        );
+    }
+
+    public function queueDeleteFingerprintTemplate(
+        FingerprintDevice $device,
+        Model $attendable,
+        ?int $fingerId = null,
+        ?User $requestedBy = null,
+    ): FingerprintDeviceCommand {
+        $this->ensureDeviceCanManageAttendable($device, $attendable);
+
+        if ($fingerId !== null && $fingerId < 0) {
+            throw new InvalidArgumentException('FID fingerprint tidak valid.');
+        }
+
+        $pin = $this->pinFor($attendable);
+        $fields = ["PIN={$pin}"];
+
+        if ($fingerId !== null) {
+            $fields[] = "FID={$fingerId}";
+        }
+
+        return $this->createCommand(
+            device: $device,
+            action: FingerprintDeviceCommand::ACTION_DELETE_FINGERPRINT_TEMPLATE,
+            command: implode(' ', [
+                'DATA',
+                'DELETE',
+                'FINGERTMP',
+                implode("\t", $fields),
+            ]),
+            attendable: $attendable,
+            requestedBy: $requestedBy,
+            payload: [
+                'pin' => $pin,
+                'fid' => $fingerId,
+            ],
+        );
+    }
+
     public function queueUpdateFingerprintTemplate(
         FingerprintDevice $device,
         Model $attendable,
@@ -208,6 +256,7 @@ class AdmsCommandService
         $replyPayload = $this->parseReplyPayload($rawReply);
         $comparison = $this->compareReplyPayload($command, $returnCode, $replyPayload);
         $hasComparablePayload = $this->hasComparablePayload($command, $replyPayload);
+        $storedReplyPayload = $this->storedReplyPayload($command, $replyPayload, $hasComparablePayload);
 
         $command->update([
             'status' => $succeeded
@@ -215,9 +264,7 @@ class AdmsCommandService
                 : FingerprintDeviceCommand::STATUS_FAILED,
             'return_code' => $returnCode === '' ? null : $returnCode,
             'raw_reply' => $rawReply,
-            'reply_payload' => $hasComparablePayload || empty($command->reply_payload)
-                ? (empty($replyPayload) ? null : $replyPayload)
-                : $command->reply_payload,
+            'reply_payload' => $storedReplyPayload,
             'comparison_status' => $hasComparablePayload || $command->comparison_status === null
                 ? $comparison['status']
                 : $command->comparison_status,
@@ -292,13 +339,29 @@ class AdmsCommandService
             ->first();
 
         if (! $command) {
+            $command = FingerprintDeviceCommand::query()
+                ->whereBelongsTo($device)
+                ->where('action', FingerprintDeviceCommand::ACTION_QUERY_USERS)
+                ->whereIn('status', [
+                    FingerprintDeviceCommand::STATUS_PENDING,
+                    FingerprintDeviceCommand::STATUS_SENT,
+                    FingerprintDeviceCommand::STATUS_SUCCEEDED,
+                ])
+                ->where('payload->all', true)
+                ->latest()
+                ->first();
+        }
+
+        if (! $command) {
             return null;
         }
 
         $comparison = $this->compareReplyPayload($command, '0', $replyPayload);
 
         $command->update([
-            'reply_payload' => $replyPayload,
+            'reply_payload' => $command->action === FingerprintDeviceCommand::ACTION_QUERY_USERS
+                ? $this->mergeQueryUsersPayload($command, $replyPayload)
+                : $replyPayload,
             'comparison_status' => $comparison['status'],
             'comparison_details' => $comparison['details'],
         ]);
@@ -457,6 +520,17 @@ class AdmsCommandService
      */
     private function compareReplyPayload(FingerprintDeviceCommand $command, string $returnCode, array $replyPayload): array
     {
+        if ($command->action === FingerprintDeviceCommand::ACTION_QUERY_USERS) {
+            return [
+                'status' => match (true) {
+                    $returnCode !== '0' => FingerprintDeviceCommand::COMPARISON_MISSING,
+                    empty($replyPayload) => FingerprintDeviceCommand::COMPARISON_UNKNOWN,
+                    default => FingerprintDeviceCommand::COMPARISON_SYNCED,
+                },
+                'details' => null,
+            ];
+        }
+
         if ($command->action !== FingerprintDeviceCommand::ACTION_QUERY_USER) {
             if ($command->action !== FingerprintDeviceCommand::ACTION_QUERY_FINGERPRINT_TEMPLATE) {
                 return ['status' => null, 'details' => null];
@@ -537,6 +611,7 @@ class AdmsCommandService
     {
         return match ($command->action) {
             FingerprintDeviceCommand::ACTION_QUERY_USER => $this->hasQueryUserPayload($replyPayload),
+            FingerprintDeviceCommand::ACTION_QUERY_USERS => $this->hasQueryUserPayload($replyPayload),
             FingerprintDeviceCommand::ACTION_QUERY_FINGERPRINT_TEMPLATE => $this->hasFingerprintTemplatePayload($replyPayload),
             default => false,
         };
@@ -585,6 +660,36 @@ class AdmsCommandService
         $payload = $command->reply_payload ?? [];
         $payload['PIN'] = $replyPayload['PIN'];
         $payload['templates'][$fingerId] = $replyPayload;
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, string>  $replyPayload
+     * @return array<string, mixed>|null
+     */
+    private function storedReplyPayload(FingerprintDeviceCommand $command, array $replyPayload, bool $hasComparablePayload): ?array
+    {
+        if ($command->action === FingerprintDeviceCommand::ACTION_QUERY_USERS && filled($replyPayload['PIN'] ?? null)) {
+            return $this->mergeQueryUsersPayload($command, $replyPayload);
+        }
+
+        if (! $hasComparablePayload && ! empty($command->reply_payload)) {
+            return $command->reply_payload;
+        }
+
+        return empty($replyPayload) ? null : $replyPayload;
+    }
+
+    /**
+     * @param  array<string, string>  $replyPayload
+     * @return array<string, mixed>
+     */
+    private function mergeQueryUsersPayload(FingerprintDeviceCommand $command, array $replyPayload): array
+    {
+        $pin = (string) $replyPayload['PIN'];
+        $payload = $command->reply_payload ?? [];
+        $payload['users'][$pin] = $replyPayload;
 
         return $payload;
     }

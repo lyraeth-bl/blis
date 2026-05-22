@@ -3,14 +3,19 @@
 namespace App\Filament\Resources\FingerprintDevices\Tables;
 
 use App\Models\FingerprintDevice;
+use App\Services\AdmsCommandService;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class FingerprintDevicesTable
 {
@@ -93,8 +98,32 @@ class FingerprintDevicesTable
                     ]),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    Action::make('query_users')
+                        ->label('Query Semua User')
+                        ->icon('heroicon-o-magnifying-glass')
+                        ->color('gray')
+                        ->action(function (FingerprintDevice $record): void {
+                            try {
+                                app(AdmsCommandService::class)->queueQueryUsers(
+                                    device: $record,
+                                    requestedBy: Auth::user(),
+                                );
+
+                                Notification::make()
+                                    ->title("Command query semua user {$record->name} dibuat")
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('Error: '.$e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+                    ViewAction::make(),
+                    EditAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

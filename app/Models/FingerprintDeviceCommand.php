@@ -51,7 +51,11 @@ class FingerprintDeviceCommand extends Model
 
     public const ACTION_QUERY_USER = 'query_user';
 
+    public const ACTION_QUERY_USERS = 'query_users';
+
     public const ACTION_UPDATE_FINGERPRINT_TEMPLATE = 'update_fingerprint_template';
+
+    public const ACTION_DELETE_FINGERPRINT_TEMPLATE = 'delete_fingerprint_template';
 
     public const ACTION_QUERY_FINGERPRINT_TEMPLATE = 'query_fingerprint_template';
 

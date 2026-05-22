@@ -213,6 +213,84 @@ class AdmsControllerTest extends TestCase
         $this->assertSame(3, $command->payload['size']);
     }
 
+    public function test_getrequest_returns_pending_delete_fingerprint_template_command(): void
+    {
+        $unit = Unit::query()->first();
+        $device = FingerprintDevice::create([
+            'serial_number' => 'DELETE-FINGERPRINT-TEMPLATE-SN',
+            'name' => 'Delete Fingerprint Template Device',
+            'location' => 'Office',
+            'ip_address' => null,
+            'type' => 'employee',
+        ]);
+        $device->units()->attach($unit);
+
+        $employee = Employee::create([
+            'nip' => '2201',
+            'name' => 'Employee Delete Finger',
+            'email' => 'employee-delete-finger@example.test',
+            'position' => 'Staff',
+            'unit_id' => $unit->id,
+        ]);
+
+        $command = app(AdmsCommandService::class)->queueDeleteFingerprintTemplate(
+            device: $device,
+            attendable: $employee,
+            fingerId: 3,
+        );
+
+        $response = $this->get('/iclock/getrequest?SN=DELETE-FINGERPRINT-TEMPLATE-SN');
+
+        $response
+            ->assertOk()
+            ->assertSeeText("C:{$command->command_id}:DATA DELETE FINGERTMP")
+            ->assertSeeText('PIN=2201')
+            ->assertSeeText('FID=3');
+
+        $command->refresh();
+
+        $this->assertSame(FingerprintDeviceCommand::ACTION_DELETE_FINGERPRINT_TEMPLATE, $command->action);
+        $this->assertSame(3, $command->payload['fid']);
+    }
+
+    public function test_delete_fingerprint_template_command_can_target_all_user_templates(): void
+    {
+        $unit = Unit::query()->first();
+        $device = FingerprintDevice::create([
+            'serial_number' => 'DELETE-ALL-FINGERPRINT-TEMPLATE-SN',
+            'name' => 'Delete All Fingerprint Template Device',
+            'location' => 'Office',
+            'ip_address' => null,
+            'type' => 'employee',
+        ]);
+        $device->units()->attach($unit);
+
+        $employee = Employee::create([
+            'nip' => '2202',
+            'name' => 'Employee Delete All Finger',
+            'email' => 'employee-delete-all-finger@example.test',
+            'position' => 'Staff',
+            'unit_id' => $unit->id,
+        ]);
+
+        $command = app(AdmsCommandService::class)->queueDeleteFingerprintTemplate(
+            device: $device,
+            attendable: $employee,
+        );
+
+        $response = $this->get('/iclock/getrequest?SN=DELETE-ALL-FINGERPRINT-TEMPLATE-SN');
+
+        $response
+            ->assertOk()
+            ->assertSeeText("C:{$command->command_id}:DATA DELETE FINGERTMP")
+            ->assertSeeText('PIN=2202')
+            ->assertDontSeeText('FID=');
+
+        $command->refresh();
+
+        $this->assertNull($command->payload['fid']);
+    }
+
     public function test_getrequest_returns_pending_query_fingerprint_template_command(): void
     {
         $unit = Unit::query()->first();
@@ -251,6 +329,28 @@ class AdmsControllerTest extends TestCase
 
         $this->assertSame(FingerprintDeviceCommand::ACTION_QUERY_FINGERPRINT_TEMPLATE, $command->action);
         $this->assertSame(2, $command->payload['finger_id']);
+    }
+
+    public function test_getrequest_returns_pending_query_all_users_command(): void
+    {
+        $device = FingerprintDevice::create([
+            'serial_number' => 'QUERY-ALL-USERS-SN',
+            'name' => 'Query All Users Device',
+            'location' => 'Office',
+            'ip_address' => null,
+            'type' => 'employee',
+        ]);
+
+        $command = app(AdmsCommandService::class)->queueQueryUsers($device);
+
+        $response = $this->get('/iclock/getrequest?SN=QUERY-ALL-USERS-SN');
+
+        $response
+            ->assertOk()
+            ->assertSeeText("C:{$command->command_id}:DATA QUERY USERINFO");
+
+        $this->assertSame(FingerprintDeviceCommand::ACTION_QUERY_USERS, $command->action);
+        $this->assertTrue($command->payload['all']);
     }
 
     public function test_query_fingerprint_template_reads_fp_data_from_operlog_before_device_ack(): void
@@ -624,6 +724,43 @@ class AdmsControllerTest extends TestCase
         $this->assertSame(FingerprintDeviceCommand::COMPARISON_SYNCED, $command->comparison_status);
         $this->assertSame('9101', $command->reply_payload['PIN']);
         $this->assertSame('Employee Operlog', $command->reply_payload['Name']);
+    }
+
+    public function test_query_all_users_reads_multiple_user_rows_from_operlog(): void
+    {
+        $device = FingerprintDevice::create([
+            'serial_number' => 'QUERY-ALL-USERS-OPERLOG-SN',
+            'name' => 'Query All Users Operlog Device',
+            'location' => 'Office',
+            'ip_address' => null,
+            'type' => 'employee',
+        ]);
+
+        $command = app(AdmsCommandService::class)->queueQueryUsers($device);
+
+        $this->get('/iclock/getrequest?SN=QUERY-ALL-USERS-OPERLOG-SN')
+            ->assertOk();
+
+        $this->call(
+            'POST',
+            '/iclock/cdata?SN=QUERY-ALL-USERS-OPERLOG-SN&table=OPERLOG&OpStamp=9999',
+            content: implode("\n", [
+                "USER PIN=9201\tName=Employee One\tPri=0\tPasswd=\tCard=0\tGrp=1\tTZ=0000000000000000\tVerify=-1",
+                "USER PIN=9202\tName=Employee Two\tPri=0\tPasswd=\tCard=0\tGrp=1\tTZ=0000000000000000\tVerify=-1",
+            ])."\n",
+        )->assertOk();
+
+        $this->call(
+            'POST',
+            '/iclock/devicecmd?SN=QUERY-ALL-USERS-OPERLOG-SN',
+            content: "ID={$command->command_id}&Return=0&CMD=DATA\n",
+        )->assertOk();
+
+        $command->refresh();
+
+        $this->assertSame(FingerprintDeviceCommand::COMPARISON_SYNCED, $command->comparison_status);
+        $this->assertSame('Employee One', $command->reply_payload['users']['9201']['Name']);
+        $this->assertSame('Employee Two', $command->reply_payload['users']['9202']['Name']);
     }
 
     public function test_query_user_reply_marks_data_as_different_when_device_payload_differs(): void

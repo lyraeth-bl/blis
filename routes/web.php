@@ -12,10 +12,10 @@ Route::get('/', function () {
 
     $websitesJson = $websites->map(function ($w) {
         return [
-            'name'     => $w->name,
-            'url'      => $w->url,
+            'name' => $w->name,
+            'url' => $w->url,
             'category' => $w->category,
-            'host'     => parse_url($w->url, PHP_URL_HOST) ?: $w->url,
+            'host' => parse_url($w->url, PHP_URL_HOST) ?: $w->url,
         ];
     })->values();
 

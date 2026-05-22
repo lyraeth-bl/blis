@@ -14,7 +14,7 @@ class ListFingerprintDevices extends ListRecords
     {
         return sprintf(
             'Device ADMS tidak perlu ditambahkan manual. Data mesin akan terisi otomatis setelah URL aplikasi %s dimasukkan ke pengaturan ADMS mesin.',
-            'blis.budiluhur.web.id',
+            'budiluhur.web.id',
         );
     }
 

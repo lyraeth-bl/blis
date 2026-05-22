@@ -39,7 +39,9 @@ class CommandsRelationManager extends RelationManager
                         FingerprintDeviceCommand::ACTION_UPDATE_USER => 'Update User',
                         FingerprintDeviceCommand::ACTION_DELETE_USER => 'Delete User',
                         FingerprintDeviceCommand::ACTION_QUERY_USER => 'Query User',
+                        FingerprintDeviceCommand::ACTION_QUERY_USERS => 'Query Users',
                         FingerprintDeviceCommand::ACTION_UPDATE_FINGERPRINT_TEMPLATE => 'Upload Finger',
+                        FingerprintDeviceCommand::ACTION_DELETE_FINGERPRINT_TEMPLATE => 'Delete Finger',
                         FingerprintDeviceCommand::ACTION_QUERY_FINGERPRINT_TEMPLATE => 'Query Finger',
                         default => $state,
                     })
@@ -47,7 +49,9 @@ class CommandsRelationManager extends RelationManager
                         FingerprintDeviceCommand::ACTION_UPDATE_USER => 'success',
                         FingerprintDeviceCommand::ACTION_DELETE_USER => 'danger',
                         FingerprintDeviceCommand::ACTION_QUERY_USER => 'gray',
+                        FingerprintDeviceCommand::ACTION_QUERY_USERS => 'gray',
                         FingerprintDeviceCommand::ACTION_UPDATE_FINGERPRINT_TEMPLATE => 'info',
+                        FingerprintDeviceCommand::ACTION_DELETE_FINGERPRINT_TEMPLATE => 'danger',
                         FingerprintDeviceCommand::ACTION_QUERY_FINGERPRINT_TEMPLATE => 'gray',
                         default => 'gray',
                     }),
@@ -103,6 +107,12 @@ class CommandsRelationManager extends RelationManager
                 TextColumn::make('comparison_details')
                     ->label('Perbedaan')
                     ->state(fn (FingerprintDeviceCommand $record): string => $this->formatComparisonDetails($record))
+                    ->placeholder('-')
+                    ->toggleable(),
+
+                TextColumn::make('query_users_summary')
+                    ->label('User Device')
+                    ->state(fn (FingerprintDeviceCommand $record): string => $this->formatQueryUsersSummary($record))
                     ->placeholder('-')
                     ->toggleable(),
 
@@ -213,6 +223,23 @@ class CommandsRelationManager extends RelationManager
         return collect($details)
             ->map(fn (array $values, string $field): string => "{$field}: web={$values['web']}; device={$values['device']}")
             ->join(' | ');
+    }
+
+    private function formatQueryUsersSummary(FingerprintDeviceCommand $record): string
+    {
+        if ($record->action !== FingerprintDeviceCommand::ACTION_QUERY_USERS) {
+            return '-';
+        }
+
+        $users = $record->reply_payload['users'] ?? [];
+
+        if (! is_array($users) || empty($users)) {
+            return '-';
+        }
+
+        return collect($users)
+            ->map(fn (array $user): string => ($user['PIN'] ?? '-').' - '.($user['Name'] ?? '-'))
+            ->join(' ; ');
     }
 
     private function formatFingerprintTemplateSummary(FingerprintDeviceCommand $record): string

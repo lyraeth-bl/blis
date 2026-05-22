@@ -22,7 +22,7 @@ class Website extends Model
     protected function casts(): array
     {
         return [
-            'password'   => 'encrypted',
+            'password' => 'encrypted',
             'is_private' => 'boolean',
         ];
     }
