@@ -31,6 +31,11 @@ class Unit extends Model
         return $this->hasMany(Employee::class);
     }
 
+    public function picketSchedules(): HasMany
+    {
+        return $this->hasMany(PicketSchedule::class);
+    }
+
     public function fingerprintDevices(): BelongsToMany
     {
         return $this->belongsToMany(FingerprintDevice::class)

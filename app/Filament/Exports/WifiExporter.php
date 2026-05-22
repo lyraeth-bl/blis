@@ -33,6 +33,10 @@ class WifiExporter extends Exporter
                 ->label('Password Admin'),
             ExportColumn::make('link')
                 ->label('Link Admin'),
+            ExportColumn::make('unitModel.display_name')
+                ->label('Unit'),
+            ExportColumn::make('is_private')
+                ->label('Private'),
             ExportColumn::make('description')
                 ->label('Deskripsi'),
             ExportColumn::make('created_at')
@@ -44,12 +48,10 @@ class WifiExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Your wifi export has completed and ' . Number::format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
-        $body = 'Your wifi export has completed and ' . Number::format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
+        $body = 'Your wifi export has completed and '.Number::format($export->successful_rows).' '.str('row')->plural($export->successful_rows).' exported.';
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
-            $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
+            $body .= ' '.Number::format($failedRowsCount).' '.str('row')->plural($failedRowsCount).' failed to export.';
         }
 
         return $body;

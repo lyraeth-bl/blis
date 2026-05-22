@@ -29,6 +29,11 @@ class Employee extends Model
             ->where('attendable_type', self::class);
     }
 
+    public function picketSchedules(): HasMany
+    {
+        return $this->hasMany(PicketSchedule::class);
+    }
+
     public function fingerprintDevices(): MorphToMany
     {
         return $this->morphToMany(FingerprintDevice::class, 'attendable', 'fingerprint_device_users')

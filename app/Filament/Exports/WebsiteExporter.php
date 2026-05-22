@@ -25,6 +25,10 @@ class WebsiteExporter extends Exporter
                 ->label('Username/Email'),
             ExportColumn::make('category')
                 ->label('Kategori'),
+            ExportColumn::make('unitModel.display_name')
+                ->label('Unit'),
+            ExportColumn::make('is_private')
+                ->label('Private'),
             ExportColumn::make('description')
                 ->label('Deskripsi'),
             ExportColumn::make('created_at')

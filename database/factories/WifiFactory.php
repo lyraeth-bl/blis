@@ -27,6 +27,7 @@ class WifiFactory extends Factory
             'admin_password' => fake()->password(),
             'link' => 'http://'.fake()->ipv4(),
             'description' => fake()->sentence(),
+            'is_private' => false,
         ];
     }
 }
