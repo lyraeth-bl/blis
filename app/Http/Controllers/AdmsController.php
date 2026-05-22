@@ -94,6 +94,7 @@ class AdmsController extends Controller
             "GET OPTION FROM: {$serialNumber}",
             'Stamp=9999',
             'OpStamp='.time(),
+            'TimeZone=420',
             'ErrorDelay=60',
             'Delay=30',
             'ResLogDay=18250',

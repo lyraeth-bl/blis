@@ -20,6 +20,7 @@ class AdmsControllerTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeText('GET OPTION FROM: BOCK200961014')
+            ->assertSeeText('TimeZone=420')
             ->assertSeeText('Realtime=1')
             ->assertSeeText('Encrypt=0');
 
