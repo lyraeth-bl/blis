@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\QrScanService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -17,7 +18,7 @@ class QrAttendanceScanController extends Controller
         ]);
 
         try {
-            $result = $qrScanService->process($validated['token']);
+            $result = $qrScanService->process($validated['token'], $request->user());
 
             return response()->json([
                 'message' => 'Absensi berhasil dicatat.',
@@ -41,6 +42,10 @@ class QrAttendanceScanController extends Controller
             return response()->json([
                 'message' => $exception->getMessage(),
             ], 422);
+        } catch (AuthorizationException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 403);
         } catch (Throwable) {
             return response()->json([
                 'message' => 'Scan gagal diproses.',

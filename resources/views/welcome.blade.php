@@ -425,6 +425,102 @@
             opacity: 0.85;
         }
 
+        .nav-logout {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
+            background: var(--canvas);
+            text-decoration: none;
+            padding: 0 12px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 6px;
+            border: 1px solid var(--hairline);
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color .15s, background .15s;
+        }
+
+        .nav-logout:hover {
+            border-color: var(--hairline-strong);
+            background: var(--canvas-soft-2);
+        }
+
+        .unit-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .unit-filter-link {
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--hairline);
+            border-radius: 9999px;
+            padding: 0 12px;
+            background: var(--canvas);
+            color: var(--body);
+            font-size: 13px;
+            text-decoration: none;
+            transition: border-color .15s, color .15s, background .15s;
+        }
+
+        .unit-filter-link:hover,
+        .unit-filter-link.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--on-primary);
+        }
+
+        .login-notice {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 1px solid var(--hairline);
+            border-radius: 8px;
+            background: color-mix(in srgb, var(--canvas) 78%, transparent);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-card);
+        }
+
+        .login-notice-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 2px;
+        }
+
+        .login-notice-text {
+            font-size: 13px;
+            line-height: 20px;
+            color: var(--body);
+        }
+
+        .login-notice-link {
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            flex-shrink: 0;
+            border-radius: 9999px;
+            padding: 0 14px;
+            background: var(--primary);
+            color: var(--on-primary);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: opacity .15s;
+        }
+
+        .login-notice-link:hover { opacity: .86; }
+
         /* ── Hero ── */
         .hero {
             max-width: 1120px;
@@ -957,6 +1053,16 @@
                 margin-bottom: 20px;
             }
 
+            .unit-filter {
+                margin-bottom: 20px;
+            }
+
+            .login-notice {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-bottom: 20px;
+            }
+
             .cards-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
@@ -1040,7 +1146,7 @@
     <!-- Nav -->
     <nav>
         <div class="nav-inner">
-            <a href="/" class="nav-brand">
+            <a href="{{ route('home') }}" class="nav-brand">
                 <div class="nav-logo-mark">
                     <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 </div>
@@ -1048,8 +1154,10 @@
             </a>
 
             <div class="nav-links">
-                <a href="/qr-absensi" class="nav-link">QR Absensi</a>
-                <a href="/wifi" class="nav-link">WiFi</a>
+                @if (auth()->user()?->canScanQrAttendance())
+                    <a href="{{ route('qr-attendance.index') }}" class="nav-link">QR Absensi</a>
+                @endif
+                <a href="{{ route('wifi.index') }}" class="nav-link">WiFi</a>
             </div>
 
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -1072,7 +1180,18 @@
                     </svg>
                 </button>
 
-                <a href="/admin" class="nav-cta">Admin Panel</a>
+                @auth
+                    @if (auth()->user()?->canAccessBackOffice())
+                        <a href="/admin" class="nav-cta">Admin Panel</a>
+                    @endif
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="nav-logout">Keluar</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="nav-cta">Login</a>
+                @endauth
             </div>
         </div>
     </nav>
@@ -1096,14 +1215,16 @@
             </p>
 
             <div class="hero-actions">
-                <a href="/qr-absensi" class="btn-primary">
-                    Mulai Absensi
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" stroke="currentColor" stroke-width="1.75"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </a>
-                <a href="/wifi" class="btn-secondary">
+                @if (auth()->user()?->canScanQrAttendance())
+                    <a href="{{ route('qr-attendance.index') }}" class="btn-primary">
+                        Mulai Absensi
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" stroke="currentColor" stroke-width="1.75"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                @endif
+                <a href="{{ route('wifi.index') }}" class="btn-secondary">
                     Lihat WiFi
                 </a>
             </div>
@@ -1114,6 +1235,29 @@
     <section class="cards-section">
         <p class="section-eyebrow">Layanan</p>
         <h2 class="section-title">Akses cepat</h2>
+
+        <div class="unit-filter" aria-label="Filter unit">
+            <a href="{{ route('home') }}" class="unit-filter-link {{ $selectedUnitId === null ? 'active' : '' }}">
+                Semua unit
+            </a>
+
+            @foreach ($units as $unit)
+                <a href="{{ route('home', ['unit' => $unit->id]) }}"
+                    class="unit-filter-link {{ $selectedUnitId === $unit->id ? 'active' : '' }}">
+                    {{ $unit->display_name }}
+                </a>
+            @endforeach
+        </div>
+
+        @guest
+            <div class="login-notice">
+                <div>
+                    <p class="login-notice-title">Login untuk akses lengkap</p>
+                    <p class="login-notice-text">Daftar ini hanya menampilkan website publik. Masuk dengan akun Google staff untuk melihat website private sesuai unit.</p>
+                </div>
+                <a href="{{ route('login') }}" class="login-notice-link">Login Google</a>
+            </div>
+        @endguest
 
         <div class="cards-grid">
 
@@ -1140,6 +1284,18 @@
                                     style="display: inline-flex; align-items: center; gap: 4px; background: var(--canvas-soft-2); border: 1px solid var(--hairline); border-radius: 9999px; padding: 1px 8px; font-size: 11px; color: var(--mute);">
                                     {{ $website->category }}
                                 </span>
+                                @if ($website->unitModel)
+                                    <span
+                                        style="display: inline-flex; align-items: center; gap: 4px; background: var(--canvas-soft-2); border: 1px solid var(--hairline); border-radius: 9999px; padding: 1px 8px; font-size: 11px; color: var(--mute);">
+                                        {{ $website->unitModel->display_name }}
+                                    </span>
+                                @endif
+                                @if ($website->is_private)
+                                    <span
+                                        style="display: inline-flex; align-items: center; gap: 4px; background: var(--canvas-soft-2); border: 1px solid var(--hairline); border-radius: 9999px; padding: 1px 8px; font-size: 11px; color: var(--mute);">
+                                        Private
+                                    </span>
+                                @endif
                             </p>
                         @endif
                     </div>
@@ -1156,33 +1312,35 @@
                 </a>
             @empty
                 {{-- Fallback: hardcoded pages when no websites in DB --}}
-                <a href="/qr-absensi" class="app-card card-tint-0">
-                    <div class="card-icon card-icon-tint-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                            stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="3" y="3" width="7" height="7" rx="1" />
-                            <rect x="14" y="3" width="7" height="7" rx="1" />
-                            <rect x="3" y="14" width="7" height="7" rx="1" />
-                            <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
-                        </svg>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">QR Absensi</p>
-                        <p class="card-desc">Scan QR code untuk mencatat kehadiran siswa secara real-time dengan validasi
-                            otomatis.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-tag">/qr-absensi</span>
-                        <div class="card-arrow">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
+                @if (auth()->user()?->canScanQrAttendance())
+                    <a href="{{ route('qr-attendance.index') }}" class="app-card card-tint-0">
+                        <div class="card-icon card-icon-tint-0">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
                                 stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" />
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3z" />
                             </svg>
                         </div>
-                    </div>
-                </a>
+                        <div class="card-body">
+                            <p class="card-title">QR Absensi</p>
+                            <p class="card-desc">Scan QR code untuk mencatat kehadiran siswa secara real-time dengan validasi
+                                otomatis.</p>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-tag">/qr-absensi</span>
+                            <div class="card-arrow">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" />
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                @endif
 
-                <a href="/wifi" class="app-card card-tint-1">
+                <a href="{{ route('wifi.index') }}" class="app-card card-tint-1">
                     <div class="card-icon card-icon-tint-1">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
                             stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
@@ -1208,31 +1366,33 @@
                     </div>
                 </a>
 
-                <a href="/admin" class="app-card card-tint-2">
-                    <div class="card-icon card-icon-tint-2">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
-                            stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 7v5c0 5.25 3.75 10.15 9 11.4 1.08-.24 2.08-.62 3-.84" />
-                            <circle cx="18" cy="18" r="3" />
-                            <path
-                                d="M18 15v-2M18 21v.01M21 18h-2M15 18h.01M20.12 15.88l-1.41 1.41M17.29 20.71l-1.41-1.41M20.12 20.12l-1.41-1.41M17.29 15.29l-1.41 1.41" />
-                        </svg>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-title">Admin Panel</p>
-                        <p class="card-desc">Kelola data siswa, karyawan, absensi, dan konfigurasi sistem melalui panel
-                            administrasi.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-tag">/admin</span>
-                        <div class="card-arrow">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
+                @if (auth()->user()?->canAccessBackOffice())
+                    <a href="/admin" class="app-card card-tint-2">
+                        <div class="card-icon card-icon-tint-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
                                 stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" />
+                                <path d="M12 2L2 7v5c0 5.25 3.75 10.15 9 11.4 1.08-.24 2.08-.62 3-.84" />
+                                <circle cx="18" cy="18" r="3" />
+                                <path
+                                    d="M18 15v-2M18 21v.01M21 18h-2M15 18h.01M20.12 15.88l-1.41 1.41M17.29 20.71l-1.41-1.41M20.12 20.12l-1.41-1.41M17.29 15.29l-1.41 1.41" />
                             </svg>
                         </div>
-                    </div>
-                </a>
+                        <div class="card-body">
+                            <p class="card-title">Admin Panel</p>
+                            <p class="card-desc">Kelola data siswa, karyawan, absensi, dan konfigurasi sistem melalui panel
+                                administrasi.</p>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-tag">/admin</span>
+                            <div class="card-arrow">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
+                                    stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M3 8H13M8.5 3.5L13 8L8.5 12.5" />
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                @endif
             @endforelse
 
         </div>
@@ -1241,7 +1401,7 @@
     <!-- Footer -->
     <footer>
         <div class="footer-inner">
-            <a href="/" class="footer-brand">
+            <a href="{{ route('home') }}" class="footer-brand">
                 <div class="footer-logo-mark">
                     <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 </div>
@@ -1255,9 +1415,13 @@
                     <a href="{{ $website->url }}" class="footer-link" target="_blank"
                         rel="noopener">{{ $website->name }}</a>
                 @empty
-                    <a href="/qr-absensi" class="footer-link">QR Absensi</a>
-                    <a href="/wifi" class="footer-link">WiFi</a>
-                    <a href="/admin" class="footer-link">Admin</a>
+                    @if (auth()->user()?->canScanQrAttendance())
+                        <a href="{{ route('qr-attendance.index') }}" class="footer-link">QR Absensi</a>
+                    @endif
+                    <a href="{{ route('wifi.index') }}" class="footer-link">WiFi</a>
+                    @if (auth()->user()?->canAccessBackOffice())
+                        <a href="/admin" class="footer-link">Admin</a>
+                    @endif
                 @endforelse
             </div>
         </div>
@@ -1322,9 +1486,13 @@
 
             // Fallback when table is empty
             const fallback = [
-                { name: 'QR Absensi', url: '/qr-absensi', category: 'Absensi & Kehadiran', host: '/qr-absensi' },
+                @if (auth()->user()?->canScanQrAttendance())
+                    { name: 'QR Absensi', url: '{{ route('qr-attendance.index') }}', category: 'Absensi & Kehadiran', host: '/qr-absensi' },
+                @endif
                 { name: 'Daftar WiFi', url: '/wifi',       category: 'Jaringan & Infrastruktur', host: '/wifi' },
-                { name: 'Admin Panel', url: '/admin',      category: 'Sistem Internal', host: '/admin' },
+                @if (auth()->user()?->canAccessBackOffice())
+                    { name: 'Admin Panel', url: '/admin',      category: 'Sistem Internal', host: '/admin' },
+                @endif
             ];
 
             const items = websites.length ? websites : fallback;

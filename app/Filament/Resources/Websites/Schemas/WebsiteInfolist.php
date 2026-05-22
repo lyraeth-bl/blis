@@ -20,7 +20,7 @@ class WebsiteInfolist
 
                         TextEntry::make('url')
                             ->label('URL/Domain')
-                            ->url(fn($record) => $record->url)
+                            ->url(fn ($record) => $record->url)
                             ->openUrlInNewTab(),
 
                         // TextEntry::make('username')
@@ -33,6 +33,15 @@ class WebsiteInfolist
 
                         TextEntry::make('category')
                             ->label('Kategori')
+                            ->badge(),
+
+                        TextEntry::make('unitModel.display_name')
+                            ->label('Unit')
+                            ->placeholder('Semua unit'),
+
+                        TextEntry::make('is_private')
+                            ->label('Visibilitas')
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Private' : 'Public')
                             ->badge(),
                     ]),
 

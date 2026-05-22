@@ -24,6 +24,7 @@ class WebsiteFactory extends Factory
             'password' => fake()->password(),
             'category' => fake()->randomElement(['Business', 'Personal', 'Social Media', 'E-commerce', 'Other']),
             'description' => fake()->sentence(),
+            'is_private' => false,
         ];
     }
 }

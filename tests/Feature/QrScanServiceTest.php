@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Attendance;
 use App\Models\FingerprintDevice;
 use App\Models\Student;
+use App\Models\Unit;
 use App\Services\QrScanService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,7 +98,13 @@ class QrScanServiceTest extends TestCase
             'spo.retry.sleep' => 1,
         ]);
 
-        FingerprintDevice::create([
+        $unit = Unit::create([
+            'code' => 'TEST_QR',
+            'name' => 'SMA Test',
+            'campus' => 'Test Campus',
+        ]);
+
+        $device = FingerprintDevice::create([
             'name' => 'Front Gate',
             'location' => 'School',
             'ip_address' => '192.168.1.2',
@@ -107,10 +114,12 @@ class QrScanServiceTest extends TestCase
             'check_out_start' => '15:00',
         ]);
 
+        $device->units()->attach($unit);
+
         return Student::create([
             'nis' => '12345',
             'name' => 'Student One',
-            'unit' => 'SMAKT',
+            'unit_id' => $unit->id,
         ]);
     }
 

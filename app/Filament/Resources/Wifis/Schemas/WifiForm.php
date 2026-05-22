@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Wifis\Schemas;
 
+use App\Models\Unit;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -48,6 +50,18 @@ class WifiForm
                             'ruijie' => 'Ruijie',
                         ])
                         ->required(),
+
+                    Select::make('unit_id')
+                        ->label('Unit')
+                        ->native(false)
+                        ->nullable()
+                        ->helperText('Kosongkan jika WiFi berlaku untuk semua unit.')
+                        ->options(fn (): array => Unit::query()
+                            ->orderBy('name')
+                            ->orderBy('campus')
+                            ->get()
+                            ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
+                            ->all()),
                 ]),
 
                 Section::make('Admin Router')->schema([
@@ -78,6 +92,11 @@ class WifiForm
                     Textarea::make('description')
                         ->label('Deskripsi')
                         ->rows(3),
+
+                    Toggle::make('is_private')
+                        ->label('Private')
+                        ->helperText('Jika aktif, WiFi ini hanya terlihat setelah login oleh unit terkait.')
+                        ->default(false),
                 ]),
             ]);
     }

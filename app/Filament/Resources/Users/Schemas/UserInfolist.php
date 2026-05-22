@@ -42,6 +42,7 @@ class UserInfolist
                                 UserRole::Admin => 'danger',
                                 UserRole::Hrd => 'warning',
                                 UserRole::Tu => 'info',
+                                UserRole::Staff => 'info',
                             }),
                         TextEntry::make('units.display_name')
                             ->label('Unit')

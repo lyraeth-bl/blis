@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -24,13 +25,18 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active;
+        return $this->is_active && $this->canAccessBackOffice();
     }
 
     public function units(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class)
             ->withTimestamps();
+    }
+
+    public function employee(): HasOne
+    {
+        return $this->hasOne(Employee::class, 'email', 'email');
     }
 
     public function isAdmin(): bool
@@ -48,6 +54,46 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === UserRole::Tu;
     }
 
+    public function isStaff(): bool
+    {
+        return $this->role === UserRole::Staff;
+    }
+
+    public function canAccessBackOffice(): bool
+    {
+        return $this->isAdmin() || $this->isHrd() || $this->isTu();
+    }
+
+    public function canAccessStaffPortal(): bool
+    {
+        return $this->is_active
+            && $this->hasEmployeeEmail()
+            && ! $this->hasStudentEmailPrefix();
+    }
+
+    public function canScanQrAttendance(?int $unitId = null): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        if (! $this->canAccessStaffPortal()) {
+            return false;
+        }
+
+        $employee = $this->employee()->first();
+
+        if ($employee === null) {
+            return false;
+        }
+
+        return PicketSchedule::query()
+            ->whereBelongsTo($employee)
+            ->when($unitId !== null, fn ($query) => $query->where('unit_id', $unitId))
+            ->activeAt()
+            ->exists();
+    }
+
     public function canManageUsers(): bool
     {
         return $this->isAdmin();
@@ -59,6 +105,11 @@ class User extends Authenticatable implements FilamentUser
     }
 
     public function canManageStudents(): bool
+    {
+        return $this->isAdmin() || $this->isTu();
+    }
+
+    public function canManagePicketSchedules(): bool
     {
         return $this->isAdmin() || $this->isTu();
     }
@@ -87,7 +138,14 @@ class User extends Authenticatable implements FilamentUser
             return Unit::query()->pluck('id');
         }
 
-        return $this->units()->pluck('units.id');
+        $unitIds = $this->units()->pluck('units.id');
+        $employeeUnitId = $this->employee()->value('unit_id');
+
+        if ($employeeUnitId !== null) {
+            $unitIds->push($employeeUnitId);
+        }
+
+        return $unitIds->unique()->values();
     }
 
     /**
@@ -103,5 +161,17 @@ class User extends Authenticatable implements FilamentUser
             'role' => UserRole::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    private function hasEmployeeEmail(): bool
+    {
+        return Employee::query()
+            ->where('email', $this->email)
+            ->exists();
+    }
+
+    private function hasStudentEmailPrefix(): bool
+    {
+        return str($this->email)->lower()->startsWith(['blsma.', 'blsmk.']);
     }
 }

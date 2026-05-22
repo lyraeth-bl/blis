@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Websites\Schemas;
 
+use App\Models\Unit;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -54,6 +55,18 @@ class WebsiteForm
                             'Sistem Internal' => 'Sistem Internal',
                             'Lainnya' => 'Lainnya',
                         ]),
+
+                    Select::make('unit_id')
+                        ->label('Unit')
+                        ->native(false)
+                        ->nullable()
+                        ->helperText('Kosongkan jika website berlaku untuk semua unit.')
+                        ->options(fn (): array => Unit::query()
+                            ->orderBy('name')
+                            ->orderBy('campus')
+                            ->get()
+                            ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
+                            ->all()),
                 ]),
 
                 Section::make('Lainnya')->schema([
