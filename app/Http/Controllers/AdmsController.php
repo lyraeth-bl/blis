@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DeviceRawLog;
 use App\Models\FingerprintDevice;
+use App\Models\FingerprintDeviceCommand;
+use App\Services\AdmsCommandService;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,6 +16,7 @@ class AdmsController extends Controller
 {
     public function __construct(
         protected AttendanceService $attendanceService,
+        protected AdmsCommandService $admsCommandService,
     ) {}
 
     public function handshake(Request $request): Response
@@ -57,7 +60,36 @@ class AdmsController extends Controller
         $serialNumber = $this->serialNumberFrom($request);
         $device = $serialNumber === '' ? null : $this->touchDevice($request, $serialNumber);
 
-        $this->logRequest($request, $device, $serialNumber, null, 0);
+        $command = $device instanceof FingerprintDevice
+            ? $this->admsCommandService->nextCommandFor($device)
+            : null;
+
+        if ($command instanceof FingerprintDeviceCommand) {
+            $command->update([
+                'status' => FingerprintDeviceCommand::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
+        }
+
+        $this->logRequest($request, $device, $serialNumber, null, $command instanceof FingerprintDeviceCommand ? 1 : 0);
+
+        return response($command instanceof FingerprintDeviceCommand ? $command->iclock_command : 'OK')
+            ->header('Content-Type', 'text/plain');
+    }
+
+    public function commandReply(Request $request): Response
+    {
+        $serialNumber = $this->serialNumberFrom($request);
+
+        if ($serialNumber === '') {
+            return response('SN is required', 400)
+                ->header('Content-Type', 'text/plain');
+        }
+
+        $device = $this->touchDevice($request, $serialNumber);
+        $processedCount = $this->processCommandReplies($request, $device);
+
+        $this->logRequest($request, $device, $serialNumber, 'DEVICECMD', $processedCount);
 
         return response('OK')
             ->header('Content-Type', 'text/plain');
@@ -115,6 +147,10 @@ class AdmsController extends Controller
     ): int {
         $rows = preg_split('/\r\n|\r|\n/', $request->getContent()) ?: [];
 
+        if ($tableName === 'OPERLOG') {
+            return $this->processOperationRows($rows, $device);
+        }
+
         if ($tableName !== 'ATTLOG') {
             return collect($rows)
                 ->filter(fn (string $row): bool => trim($row) !== '')
@@ -167,6 +203,102 @@ class AdmsController extends Controller
         }
 
         return $processedCount;
+    }
+
+    /**
+     * @param  array<int, string>  $rows
+     */
+    protected function processOperationRows(array $rows, FingerprintDevice $device): int
+    {
+        $processedCount = 0;
+
+        foreach ($rows as $row) {
+            $row = trim($row);
+
+            if ($row === '') {
+                continue;
+            }
+
+            if (str_starts_with($row, 'USER ')) {
+                $this->admsCommandService->recordQueryUserPayload(
+                    device: $device,
+                    rawPayload: $row,
+                );
+            }
+
+            if (str_starts_with($row, 'FP ')) {
+                $this->admsCommandService->recordQueryFingerprintTemplatePayload(
+                    device: $device,
+                    rawPayload: $row,
+                );
+            }
+
+            $processedCount++;
+        }
+
+        return $processedCount;
+    }
+
+    protected function processCommandReplies(Request $request, FingerprintDevice $device): int
+    {
+        $processedCount = 0;
+
+        foreach ($this->commandReplyPayloads($request->getContent()) as $rawReply) {
+            parse_str($rawReply, $reply);
+            $command = $this->admsCommandService->recordReply(
+                device: $device,
+                reply: $reply,
+                rawReply: $rawReply,
+            );
+
+            if ($command instanceof FingerprintDeviceCommand) {
+                $processedCount++;
+            }
+        }
+
+        return $processedCount;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function commandReplyPayloads(string $content): array
+    {
+        $rows = preg_split('/\r\n|\r|\n/', $content) ?: [];
+        $payloads = [];
+        $currentPayload = null;
+
+        foreach ($rows as $row) {
+            $row = trim($row);
+
+            if ($row === '') {
+                continue;
+            }
+
+            if (preg_match('/(?:^|[\t&\r\n ])ID=/', $row) === 1) {
+                if ($currentPayload !== null) {
+                    $payloads[] = $currentPayload;
+                }
+
+                $currentPayload = $row;
+
+                continue;
+            }
+
+            if ($currentPayload === null) {
+                $payloads[] = $row;
+
+                continue;
+            }
+
+            $currentPayload .= "\n".$row;
+        }
+
+        if ($currentPayload !== null) {
+            $payloads[] = $currentPayload;
+        }
+
+        return $payloads;
     }
 
     protected function logRequest(

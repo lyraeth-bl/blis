@@ -3,10 +3,12 @@
 namespace App\Filament\Actions\BulkActions;
 
 use App\Models\FingerprintDevice;
+use App\Services\AdmsCommandService;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class DeleteFromDeviceBulkAction
 {
@@ -33,10 +35,8 @@ class DeleteFromDeviceBulkAction
                         ->all())
                     ->required(),
             ])
-            ->action(function (Collection $records, array $data) use ($type): void {
+            ->action(function (Collection $records, array $data): void {
                 $results = ['success' => [], 'failed' => []];
-                $relation = $type === 'student' ? 'students' : 'employees';
-
                 foreach ($data['device_ids'] as $deviceId) {
                     $device = FingerprintDevice::find($deviceId);
                     if (! $device) {
@@ -51,14 +51,13 @@ class DeleteFromDeviceBulkAction
                         }
 
                         try {
-                            $success = $device->getClient()->deleteUser($record->pin);
+                            app(AdmsCommandService::class)->queueDeleteUser(
+                                device: $device,
+                                attendable: $record,
+                                requestedBy: Auth::user(),
+                            );
 
-                            if ($success) {
-                                $device->$relation()->detach($record->id);
-                                $results['success'][] = $record->name;
-                            } else {
-                                $results['failed'][] = $record->name;
-                            }
+                            $results['success'][] = $record->name;
                         } catch (\Throwable $e) {
                             $results['failed'][] = $record->name.' ('.$e->getMessage().')';
                         }
@@ -67,7 +66,7 @@ class DeleteFromDeviceBulkAction
 
                 if (! empty($results['success'])) {
                     Notification::make()
-                        ->title(count($results['success']).' data berhasil dihapus dari device')
+                        ->title(count($results['success']).' command hapus ADMS dibuat')
                         ->success()
                         ->send();
                 }

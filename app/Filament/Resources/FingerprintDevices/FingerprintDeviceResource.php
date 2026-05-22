@@ -6,6 +6,7 @@ use App\Filament\Resources\FingerprintDevices\Pages\CreateFingerprintDevice;
 use App\Filament\Resources\FingerprintDevices\Pages\EditFingerprintDevice;
 use App\Filament\Resources\FingerprintDevices\Pages\ListFingerprintDevices;
 use App\Filament\Resources\FingerprintDevices\Pages\ViewFingerprintDevice;
+use App\Filament\Resources\FingerprintDevices\RelationManagers\CommandsRelationManager;
 use App\Filament\Resources\FingerprintDevices\RelationManagers\EmployeesRelationManager;
 use App\Filament\Resources\FingerprintDevices\RelationManagers\StudentsRelationManager;
 use App\Filament\Resources\FingerprintDevices\Schemas\FingerprintDeviceForm;
@@ -62,6 +63,7 @@ class FingerprintDeviceResource extends Resource
         return [
             StudentsRelationManager::class,
             EmployeesRelationManager::class,
+            CommandsRelationManager::class,
         ];
     }
 
