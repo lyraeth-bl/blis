@@ -775,9 +775,9 @@
                                     </svg>
                                     {{ $wifi->location }}
                                 </span>
-                                @if ($wifi->unitModel)
+                                @if ($wifi->units->isNotEmpty())
                                     <span class="location-badge">
-                                        {{ $wifi->unitModel->display_name }}
+                                        {{ $wifi->units->pluck('display_name')->join(', ') }}
                                     </span>
                                 @endif
                                 @if ($wifi->is_private)

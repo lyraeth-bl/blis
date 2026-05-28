@@ -48,7 +48,7 @@ class EmployeesTable
                     ->label('Unit')
                     ->badge()
                     ->placeholder('-')
-                    ->sortable(['unit_id']),
+                    ->sortable(['name', 'campus']),
 
                 TextColumn::make('fingerprintDevices.name')
                     ->label('Terdaftar di Device')

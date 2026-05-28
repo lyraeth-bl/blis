@@ -1,15 +1,13 @@
 services:
     laravel.test:
         build:
-            context: "."
+            context: "./vendor/laravel/sail/runtimes/8.5"
             dockerfile: Dockerfile
             args:
                 WWWGROUP: "${WWWGROUP}"
         image: "sail-8.5/app"
         extra_hosts:
             - "host.docker.internal:host-gateway"
-        command: >
-            bash -c "supervisord -c /etc/supervisor/supervisord.conf && /start-container"
         ports:
             - "${APP_PORT:-80}:80"
             - "${VITE_PORT:-5175}:${VITE_PORT:-5173}"

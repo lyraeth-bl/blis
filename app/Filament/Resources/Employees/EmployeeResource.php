@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
@@ -55,6 +56,33 @@ class EmployeeResource extends Resource
     public static function canAccess(): bool
     {
         return Auth::user()?->canManageEmployees() ?? false;
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'nip'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        if (! $record instanceof Employee) {
+            return [];
+        }
+
+        return [
+            'NIP' => $record->nip ?: '-',
+            'Jabatan' => $record->position ?: '-',
+            'Unit' => $record->unitModel?->display_name ?: '-',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()
+            ->with('unitModel:id,name,campus');
     }
 
     public static function getEloquentQuery(): Builder

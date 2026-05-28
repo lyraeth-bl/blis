@@ -28,8 +28,10 @@ class WebsiteImporter extends Importer
                 ->rules(['max:255']),
             ImportColumn::make('category')
                 ->rules(['max:255']),
-            ImportColumn::make('unit_id')
-                ->rules(['nullable', 'integer', 'exists:units,id']),
+            ImportColumn::make('units')
+                ->relationship(resolveUsing: 'id')
+                ->multiple(',')
+                ->rules(['nullable']),
             ImportColumn::make('is_private')
                 ->rules(['boolean']),
             ImportColumn::make('description'),

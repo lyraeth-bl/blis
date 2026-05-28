@@ -40,7 +40,7 @@ class StudentsTable
                     ->label('Unit')
                     ->badge()
                     ->placeholder('-')
-                    ->sortable(['unit_id']),
+                    ->sortable(['name', 'campus']),
 
                 TextColumn::make('class')
                     ->label('Kelas')

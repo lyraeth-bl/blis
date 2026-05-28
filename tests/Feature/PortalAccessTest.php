@@ -82,27 +82,37 @@ class PortalAccessTest extends TestCase
 
         $user = $this->createEmployeeUser('unit-staff@budiluhur.sch.id', UserRole::Staff, $userUnit);
 
-        Website::factory()->create([
+        $userUnitWebsite = Website::factory()->create([
             'name' => 'Private User Unit Website',
-            'unit_id' => $userUnit->id,
             'is_private' => true,
         ]);
+        $userUnitWebsite->units()->attach($userUnit);
+
+        $otherUnitWebsite = Website::factory()->create([
+            'name' => 'Private Other Unit Website',
+            'is_private' => true,
+        ]);
+        $otherUnitWebsite->units()->attach($otherUnit);
 
         Website::factory()->create([
-            'name' => 'Private Other Unit Website',
-            'unit_id' => $otherUnit->id,
+            'name' => 'Private All Units Website',
             'is_private' => true,
         ]);
 
-        Wifi::factory()->create([
+        $userUnitWifi = Wifi::factory()->create([
             'ssid' => 'Private User Unit WiFi',
-            'unit_id' => $userUnit->id,
             'is_private' => true,
         ]);
+        $userUnitWifi->units()->attach($userUnit);
+
+        $otherUnitWifi = Wifi::factory()->create([
+            'ssid' => 'Private Other Unit WiFi',
+            'is_private' => true,
+        ]);
+        $otherUnitWifi->units()->attach($otherUnit);
 
         Wifi::factory()->create([
-            'ssid' => 'Private Other Unit WiFi',
-            'unit_id' => $otherUnit->id,
+            'ssid' => 'Private All Units WiFi',
             'is_private' => true,
         ]);
 
@@ -110,12 +120,14 @@ class PortalAccessTest extends TestCase
             ->get('/')
             ->assertOk()
             ->assertSee('Private User Unit Website')
+            ->assertSee('Private All Units Website')
             ->assertDontSee('Private Other Unit Website');
 
         $this->actingAs($user)
             ->get(route('wifi.index'))
             ->assertOk()
             ->assertSee('Private User Unit WiFi')
+            ->assertSee('Private All Units WiFi')
             ->assertDontSee('Private Other Unit WiFi');
     }
 
@@ -209,6 +221,19 @@ class PortalAccessTest extends TestCase
         $this->assertDatabaseMissing(User::class, [
             'email' => 'unknown@budiluhur.sch.id',
         ]);
+    }
+
+    public function test_logout_redirects_to_home(): void
+    {
+        $user = User::factory()->create([
+            'role' => UserRole::Staff,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('logout'))
+            ->assertRedirect(route('home'));
+
+        $this->assertGuest();
     }
 
     public function test_staff_user_cannot_access_qr_attendance(): void

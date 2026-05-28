@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Websites\Schemas;
 
+use App\Models\Website;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -35,9 +36,9 @@ class WebsiteInfolist
                             ->label('Kategori')
                             ->badge(),
 
-                        TextEntry::make('unitModel.display_name')
+                        TextEntry::make('units')
                             ->label('Unit')
-                            ->placeholder('Semua unit'),
+                            ->state(fn (Website $record): string => $record->units->pluck('display_name')->join(', ') ?: 'Semua unit'),
 
                         TextEntry::make('is_private')
                             ->label('Visibilitas')

@@ -41,8 +41,10 @@ class WebsitesTable
                     ->label('Kategori')
                     ->badge(),
 
-                TextColumn::make('unitModel.display_name')
+                TextColumn::make('units.display_name')
                     ->label('Unit')
+                    ->badge()
+                    ->separator(',')
                     ->placeholder('Semua unit'),
 
                 TextColumn::make('is_private')

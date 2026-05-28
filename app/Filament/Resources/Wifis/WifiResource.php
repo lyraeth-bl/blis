@@ -14,6 +14,8 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
@@ -51,6 +53,32 @@ class WifiResource extends Resource
     public static function canAccess(): bool
     {
         return Auth::user()?->isAdmin() ?? false;
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['ssid', 'location'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        if (! $record instanceof Wifi) {
+            return [];
+        }
+
+        return [
+            'Lokasi' => $record->location ?: '-',
+            'Unit' => $record->units->pluck('display_name')->join(', ') ?: 'Semua unit',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()
+            ->with('units:id,name,campus');
     }
 
     public static function getRelations(): array

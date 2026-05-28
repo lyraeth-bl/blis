@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
     'name',
@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'password',
     'category',
     'description',
-    'unit_id',
     'is_private',
 ])]
 class Website extends Model
@@ -29,8 +28,9 @@ class Website extends Model
         ];
     }
 
-    public function unitModel(): BelongsTo
+    public function units(): BelongsToMany
     {
-        return $this->belongsTo(Unit::class, 'unit_id');
+        return $this->belongsToMany(Unit::class)
+            ->withTimestamps();
     }
 }

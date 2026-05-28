@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
     'ssid',
@@ -17,7 +17,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'admin_password',
     'link',
     'description',
-    'unit_id',
     'is_private',
 ])]
 class Wifi extends Model
@@ -33,8 +32,9 @@ class Wifi extends Model
         ];
     }
 
-    public function unitModel(): BelongsTo
+    public function units(): BelongsToMany
     {
-        return $this->belongsTo(Unit::class, 'unit_id');
+        return $this->belongsToMany(Unit::class)
+            ->withTimestamps();
     }
 }

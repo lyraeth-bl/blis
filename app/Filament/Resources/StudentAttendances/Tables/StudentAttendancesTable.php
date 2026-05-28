@@ -31,26 +31,36 @@ class StudentAttendancesTable
             ->columns([
                 TextColumn::make('attendable.nis')
                     ->label('NIS')
-                    ->searchable(query: fn(Builder $query, string $search): Builder => $query->whereHasMorph(
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHasMorph(
                         'attendable',
                         [Student::class],
-                        fn(Builder $query): Builder => $query->where('nis', 'like', "%{$search}%"),
+                        fn (Builder $query): Builder => $query->where('nis', 'like', "%{$search}%"),
                     ))
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        Student::query()
+                            ->select('nis')
+                            ->whereColumn('students.id', 'attendances.attendable_id'),
+                        $direction,
+                    )),
 
                 TextColumn::make('attendable.name')
                     ->label('Nama')
-                    ->searchable(query: fn(Builder $query, string $search): Builder => $query->whereHasMorph(
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHasMorph(
                         'attendable',
                         [Student::class],
-                        fn(Builder $query): Builder => $query->where('name', 'like', "%{$search}%"),
+                        fn (Builder $query): Builder => $query->where('name', 'like', "%{$search}%"),
                     ))
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        Student::query()
+                            ->select('name')
+                            ->whereColumn('students.id', 'attendances.attendable_id'),
+                        $direction,
+                    )),
 
                 TextColumn::make('unit')
                     ->label('Unit')
                     ->badge()
-                    ->state(fn(Attendance $record): string => $record->attendable?->unitModel?->display_name ?? $record->attendable?->unit ?? '-'),
+                    ->state(fn (Attendance $record): string => $record->attendable?->unitModel?->display_name ?? $record->attendable?->unit ?? '-'),
 
                 TextColumn::make('attendable.class')
                     ->label('Kelas'),
@@ -71,7 +81,7 @@ class StudentAttendancesTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'present' => 'success',
                         'late' => 'warning',
                         'permitted' => 'info',
@@ -81,7 +91,7 @@ class StudentAttendancesTable
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'fingerprint' => 'success',
                         'manual' => 'warning',
                     }),
@@ -112,36 +122,36 @@ class StudentAttendancesTable
                             ->native(false)
                             ->label('Sampai tanggal'),
                     ])
-                    ->query(fn(Builder $query, array $data): Builder => $query
+                    ->query(fn (Builder $query, array $data): Builder => $query
                         ->when(
                             $data['from_date'] ?? null,
-                            fn(Builder $query, string $date): Builder => $query->whereDate('date', '>=', $date),
+                            fn (Builder $query, string $date): Builder => $query->whereDate('date', '>=', $date),
                         )
                         ->when(
                             $data['to_date'] ?? null,
-                            fn(Builder $query, string $date): Builder => $query->whereDate('date', '<=', $date),
+                            fn (Builder $query, string $date): Builder => $query->whereDate('date', '<=', $date),
                         )),
 
                 SelectFilter::make('unit_id')
                     ->label('Unit')
                     ->native(false)
-                    ->options(fn(): array => Unit::query()
+                    ->options(fn (): array => Unit::query()
                         ->orderBy('name')
                         ->orderBy('campus')
                         ->get(['id', 'name', 'campus'])
-                        ->mapWithKeys(fn(Unit $unit): array => [$unit->id => $unit->display_name])
+                        ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
                         ->all())
-                    ->query(fn(Builder $query, array $data): Builder => $query->when(
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
                         $data['value'] ?? null,
-                        fn(Builder $query, int|string $unitId): Builder => $query->whereHasMorph(
+                        fn (Builder $query, int|string $unitId): Builder => $query->whereHasMorph(
                             'attendable',
                             [Student::class],
-                            fn(Builder $query): Builder => $query->where('unit_id', $unitId),
+                            fn (Builder $query): Builder => $query->where('unit_id', $unitId),
                         ),
                     ))
                     ->searchable()
                     ->preload()
-                    ->visible(fn(): bool => Auth::user()?->isAdmin() ?? false),
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
 
                 SelectFilter::make('status')
                     ->label('Status')

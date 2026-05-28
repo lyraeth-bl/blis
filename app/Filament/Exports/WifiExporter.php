@@ -33,8 +33,9 @@ class WifiExporter extends Exporter
                 ->label('Password Admin'),
             ExportColumn::make('link')
                 ->label('Link Admin'),
-            ExportColumn::make('unitModel.display_name')
-                ->label('Unit'),
+            ExportColumn::make('units')
+                ->label('Unit')
+                ->state(fn (Wifi $record): string => $record->units->pluck('display_name')->join(', ') ?: 'Semua unit'),
             ExportColumn::make('is_private')
                 ->label('Private'),
             ExportColumn::make('description')

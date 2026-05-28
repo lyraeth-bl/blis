@@ -25,8 +25,9 @@ class WebsiteExporter extends Exporter
                 ->label('Username/Email'),
             ExportColumn::make('category')
                 ->label('Kategori'),
-            ExportColumn::make('unitModel.display_name')
-                ->label('Unit'),
+            ExportColumn::make('units')
+                ->label('Unit')
+                ->state(fn (Website $record): string => $record->units->pluck('display_name')->join(', ') ?: 'Semua unit'),
             ExportColumn::make('is_private')
                 ->label('Private'),
             ExportColumn::make('description')

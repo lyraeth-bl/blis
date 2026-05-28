@@ -42,6 +42,18 @@ class Unit extends Model
             ->withTimestamps();
     }
 
+    public function websites(): BelongsToMany
+    {
+        return $this->belongsToMany(Website::class)
+            ->withTimestamps();
+    }
+
+    public function wifis(): BelongsToMany
+    {
+        return $this->belongsToMany(Wifi::class)
+            ->withTimestamps();
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return "{$this->name} - {$this->campus}";

@@ -16,11 +16,11 @@ class WifiController extends Controller
         $selectedUnitId = Unit::query()->whereKey($request->integer('unit'))->value('id');
 
         $wifis = Wifi::query()
-            ->with('unitModel')
+            ->with('units')
             ->when($selectedUnitId !== null, function ($query) use ($selectedUnitId): void {
                 $query->where(function ($query) use ($selectedUnitId): void {
-                    $query->whereNull('unit_id')
-                        ->orWhere('unit_id', $selectedUnitId);
+                    $query->doesntHave('units')
+                        ->orWhereHas('units', fn ($query) => $query->whereKey($selectedUnitId));
                 });
             })
             ->where(function ($query) use ($user, $accessibleUnitIds): void {
@@ -33,10 +33,10 @@ class WifiController extends Controller
                 $query->orWhere(function ($query) use ($accessibleUnitIds): void {
                     $query->where('is_private', true)
                         ->where(function ($query) use ($accessibleUnitIds): void {
-                            $query->whereNull('unit_id');
+                            $query->doesntHave('units');
 
                             if ($accessibleUnitIds->isNotEmpty()) {
-                                $query->orWhereIn('unit_id', $accessibleUnitIds);
+                                $query->orWhereHas('units', fn ($query) => $query->whereKey($accessibleUnitIds->all()));
                             }
                         });
                 });

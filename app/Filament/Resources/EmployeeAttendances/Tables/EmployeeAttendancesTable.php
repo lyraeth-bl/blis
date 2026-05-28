@@ -31,21 +31,31 @@ class EmployeeAttendancesTable
             ->columns([
                 TextColumn::make('attendable.nip')
                     ->label('NIP')
-                    ->searchable(query: fn(Builder $query, string $search): Builder => $query->whereHasMorph(
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHasMorph(
                         'attendable',
                         [Employee::class],
-                        fn(Builder $query): Builder => $query->where('nip', 'like', "%{$search}%"),
+                        fn (Builder $query): Builder => $query->where('nip', 'like', "%{$search}%"),
                     ))
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        Employee::query()
+                            ->select('nip')
+                            ->whereColumn('employees.id', 'attendances.attendable_id'),
+                        $direction,
+                    )),
 
                 TextColumn::make('attendable.name')
                     ->label('Nama')
-                    ->searchable(query: fn(Builder $query, string $search): Builder => $query->whereHasMorph(
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHasMorph(
                         'attendable',
                         [Employee::class],
-                        fn(Builder $query): Builder => $query->where('name', 'like', "%{$search}%"),
+                        fn (Builder $query): Builder => $query->where('name', 'like', "%{$search}%"),
                     ))
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        Employee::query()
+                            ->select('name')
+                            ->whereColumn('employees.id', 'attendances.attendable_id'),
+                        $direction,
+                    )),
 
                 TextColumn::make('attendable.position')
                     ->label('Jabatan')
@@ -54,7 +64,7 @@ class EmployeeAttendancesTable
                 TextColumn::make('unit')
                     ->label('Unit')
                     ->badge()
-                    ->state(fn(Attendance $record): string => $record->attendable?->unitModel?->display_name ?? '-'),
+                    ->state(fn (Attendance $record): string => $record->attendable?->unitModel?->display_name ?? '-'),
 
                 TextColumn::make('date')
                     ->label('Tanggal')
@@ -72,7 +82,7 @@ class EmployeeAttendancesTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'present' => 'success',
                         'late' => 'warning',
                         'permitted' => 'info',
@@ -82,7 +92,7 @@ class EmployeeAttendancesTable
                 TextColumn::make('source')
                     ->label('Sumber')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'fingerprint' => 'success',
                         'manual' => 'warning',
                     }),
@@ -113,36 +123,36 @@ class EmployeeAttendancesTable
                             ->native(false)
                             ->label('Sampai tanggal'),
                     ])
-                    ->query(fn(Builder $query, array $data): Builder => $query
+                    ->query(fn (Builder $query, array $data): Builder => $query
                         ->when(
                             $data['from_date'] ?? null,
-                            fn(Builder $query, string $date): Builder => $query->whereDate('date', '>=', $date),
+                            fn (Builder $query, string $date): Builder => $query->whereDate('date', '>=', $date),
                         )
                         ->when(
                             $data['to_date'] ?? null,
-                            fn(Builder $query, string $date): Builder => $query->whereDate('date', '<=', $date),
+                            fn (Builder $query, string $date): Builder => $query->whereDate('date', '<=', $date),
                         )),
 
                 SelectFilter::make('unit_id')
                     ->label('Unit')
                     ->native(false)
-                    ->options(fn(): array => Unit::query()
+                    ->options(fn (): array => Unit::query()
                         ->orderBy('name')
                         ->orderBy('campus')
                         ->get(['id', 'name', 'campus'])
-                        ->mapWithKeys(fn(Unit $unit): array => [$unit->id => $unit->display_name])
+                        ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
                         ->all())
-                    ->query(fn(Builder $query, array $data): Builder => $query->when(
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
                         $data['value'] ?? null,
-                        fn(Builder $query, int|string $unitId): Builder => $query->whereHasMorph(
+                        fn (Builder $query, int|string $unitId): Builder => $query->whereHasMorph(
                             'attendable',
                             [Employee::class],
-                            fn(Builder $query): Builder => $query->where('unit_id', $unitId),
+                            fn (Builder $query): Builder => $query->where('unit_id', $unitId),
                         ),
                     ))
                     ->searchable()
                     ->preload()
-                    ->visible(fn(): bool => Auth::user()?->isAdmin() ?? false),
+                    ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),
 
                 SelectFilter::make('status')
                     ->label('Status')

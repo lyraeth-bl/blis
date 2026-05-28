@@ -1284,10 +1284,10 @@
                                     style="display: inline-flex; align-items: center; gap: 4px; background: var(--canvas-soft-2); border: 1px solid var(--hairline); border-radius: 9999px; padding: 1px 8px; font-size: 11px; color: var(--mute);">
                                     {{ $website->category }}
                                 </span>
-                                @if ($website->unitModel)
+                                @if ($website->units->isNotEmpty())
                                     <span
                                         style="display: inline-flex; align-items: center; gap: 4px; background: var(--canvas-soft-2); border: 1px solid var(--hairline); border-radius: 9999px; padding: 1px 8px; font-size: 11px; color: var(--mute);">
-                                        {{ $website->unitModel->display_name }}
+                                        {{ $website->units->pluck('display_name')->join(', ') }}
                                     </span>
                                 @endif
                                 @if ($website->is_private)

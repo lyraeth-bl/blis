@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Wifis\Schemas;
 
+use App\Models\Wifi;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -28,9 +29,9 @@ class WifiInfolist
                             ->label('Tipe Router')
                             ->badge(),
 
-                        TextEntry::make('unitModel.display_name')
+                        TextEntry::make('units')
                             ->label('Unit')
-                            ->placeholder('Semua unit'),
+                            ->state(fn (Wifi $record): string => $record->units->pluck('display_name')->join(', ') ?: 'Semua unit'),
 
                         TextEntry::make('is_private')
                             ->label('Visibilitas')
