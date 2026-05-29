@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class WifiForm
 {
@@ -51,17 +52,21 @@ class WifiForm
                         ])
                         ->required(),
 
-                    Select::make('unit_id')
+                    Select::make('units')
                         ->label('Unit')
+                        ->multiple()
                         ->native(false)
-                        ->nullable()
                         ->helperText('Kosongkan jika WiFi berlaku untuk semua unit.')
-                        ->options(fn (): array => Unit::query()
-                            ->orderBy('name')
-                            ->orderBy('campus')
-                            ->get()
-                            ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
-                            ->all()),
+                        ->relationship(
+                            name: 'units',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query): Builder => $query
+                                ->orderBy('name')
+                                ->orderBy('campus'),
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (Unit $record): string => $record->display_name)
+                        ->preload()
+                        ->searchable(),
                 ]),
 
                 Section::make('Admin Router')->schema([

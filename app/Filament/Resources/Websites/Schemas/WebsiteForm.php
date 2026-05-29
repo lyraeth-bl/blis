@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class WebsiteForm
 {
@@ -26,15 +27,6 @@ class WebsiteForm
                         ->required()
                         ->url(),
 
-                    // TextInput::make('username')
-                    //     ->label('Username/Email'),
-
-                    // TextInput::make('password')
-                    //     ->label('Password')
-                    //     ->password()
-                    //     ->revealable()
-                    //     ->nullable(),
-
                     Select::make('category')
                         ->label('Kategori')
                         ->native(false)
@@ -47,7 +39,8 @@ class WebsiteForm
                             'Keuangan' => 'Keuangan',
                             'Kepegawaian' => 'Kepegawaian',
                             'Kesiswaan' => 'Kesiswaan',
-                            'Layanan Google' => 'Layanan Google',
+                            'Penialaian' => 'Penilaian',
+                            'PSB' => 'PSB',
                             'Media Sosial & Komunikasi' => 'Media Sosial & Komunikasi',
                             'Pemerintahan & Dinas' => 'Pemerintahan & Dinas',
                             'Perangkat & IoT' => 'Perangkat & IoT',
@@ -56,17 +49,21 @@ class WebsiteForm
                             'Lainnya' => 'Lainnya',
                         ]),
 
-                    Select::make('unit_id')
+                    Select::make('units')
                         ->label('Unit')
+                        ->multiple()
                         ->native(false)
-                        ->nullable()
                         ->helperText('Kosongkan jika website berlaku untuk semua unit.')
-                        ->options(fn (): array => Unit::query()
-                            ->orderBy('name')
-                            ->orderBy('campus')
-                            ->get()
-                            ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
-                            ->all()),
+                        ->relationship(
+                            name: 'units',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query): Builder => $query
+                                ->orderBy('name')
+                                ->orderBy('campus'),
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (Unit $record): string => $record->display_name)
+                        ->preload()
+                        ->searchable(),
                 ]),
 
                 Section::make('Lainnya')->schema([

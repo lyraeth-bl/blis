@@ -124,9 +124,7 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        return $this->units()
-            ->whereKey($unitId)
-            ->exists();
+        return $this->accessibleUnitIds()->contains($unitId);
     }
 
     /**
@@ -139,10 +137,10 @@ class User extends Authenticatable implements FilamentUser
         }
 
         $unitIds = $this->units()->pluck('units.id');
-        $employeeUnitId = $this->employee()->value('unit_id');
+        $employee = $this->employee()->first(['id', 'unit_id']);
 
-        if ($employeeUnitId !== null) {
-            $unitIds->push($employeeUnitId);
+        if ($employee !== null) {
+            $unitIds = $unitIds->merge($employee->accessibleUnitIds());
         }
 
         return $unitIds->unique()->values();

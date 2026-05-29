@@ -21,8 +21,9 @@ class EmployeeExporter extends Exporter
             ExportColumn::make('name'),
             ExportColumn::make('email'),
             ExportColumn::make('position'),
-            ExportColumn::make('unitModel.code')
-                ->label('unit'),
+            ExportColumn::make('units')
+                ->label('unit')
+                ->state(fn (Employee $record): string => $record->accessibleUnitsLabel()),
             ExportColumn::make('description'),
             ExportColumn::make('created_at'),
             ExportColumn::make('updated_at'),

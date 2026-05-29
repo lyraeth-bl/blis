@@ -24,8 +24,8 @@ class ListStudentAttendances extends ListRecords
                 ->label('Scan QR Absensi')
                 ->icon('heroicon-o-qr-code')
                 ->url(route('qr-attendance.index'))
-                ->color('primary'),
-            CreateAction::make(),
+                ->color('gray'),
+            CreateAction::make()->label('Absensi Manual'),
         ];
     }
 

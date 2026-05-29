@@ -28,9 +28,10 @@ class EmployeeInfolist
                         TextEntry::make('position')
                             ->label('Jabatan')
                             ->placeholder('-'),
-                        TextEntry::make('unitModel.display_name')
+                        TextEntry::make('accessible_units')
                             ->label('Unit')
                             ->badge()
+                            ->state(fn ($record): string => $record->accessibleUnitsLabel())
                             ->placeholder('-'),
                     ]),
 

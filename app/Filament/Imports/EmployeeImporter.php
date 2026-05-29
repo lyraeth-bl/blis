@@ -59,6 +59,13 @@ class EmployeeImporter extends Importer
         }
     }
 
+    protected function afterSave(): void
+    {
+        if ($this->record->unit_id !== null) {
+            $this->record->units()->syncWithoutDetaching([$this->record->unit_id]);
+        }
+    }
+
     public static function getCompletedNotificationBody(Import $import): string
     {
         $body = 'Your employee import has completed and '.Number::format($import->successful_rows).' '.str('row')->plural($import->successful_rows).' imported.';

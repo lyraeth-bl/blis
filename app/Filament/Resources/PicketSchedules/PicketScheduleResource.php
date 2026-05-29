@@ -36,6 +36,8 @@ class PicketScheduleResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'day_label';
 
+    protected static bool $isGloballySearchable = false;
+
     public static function form(Schema $schema): Schema
     {
         return PicketScheduleForm::configure($schema);

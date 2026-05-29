@@ -18,6 +18,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class EmployeesTable
@@ -44,11 +45,11 @@ class EmployeesTable
                     ->label('Jabatan')
                     ->searchable(),
 
-                TextColumn::make('unitModel.display_name')
+                TextColumn::make('accessible_units')
                     ->label('Unit')
                     ->badge()
-                    ->placeholder('-')
-                    ->sortable(['unit_id']),
+                    ->state(fn ($record): string => $record->accessibleUnitsLabel())
+                    ->placeholder('-'),
 
                 TextColumn::make('fingerprintDevices.name')
                     ->label('Terdaftar di Device')
@@ -71,6 +72,13 @@ class EmployeesTable
                         ->get(['id', 'name', 'campus'])
                         ->mapWithKeys(fn (Unit $unit): array => [$unit->id => $unit->display_name])
                         ->all())
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['value'] ?? null,
+                        fn (Builder $query, int|string $unitId): Builder => $query->where(function (Builder $query) use ($unitId): void {
+                            $query->where('unit_id', $unitId)
+                                ->orWhereHas('units', fn (Builder $query): Builder => $query->whereKey($unitId));
+                        }),
+                    ))
                     ->searchable()
                     ->preload()
                     ->visible(fn (): bool => Auth::user()?->isAdmin() ?? false),

@@ -19,7 +19,9 @@ class EmployeePolicy
 
     public function view(User $user, Employee $employee): bool
     {
-        return $user->isHrd() && $user->canAccessUnit($employee->unit_id);
+        return $user->isHrd()
+            && $employee->accessibleUnitIds()
+                ->contains(fn (int $unitId): bool => $user->canAccessUnit($unitId));
     }
 
     public function create(User $user): bool

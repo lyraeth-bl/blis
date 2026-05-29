@@ -211,6 +211,23 @@
             flex-shrink: 0;
         }
 
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 14px;
+            color: var(--body);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color .15s;
+        }
+
+        .home-link:hover {
+            color: var(--ink);
+        }
+
         .footnote {
             margin-top: 18px;
             color: var(--mute);
@@ -262,7 +279,7 @@
         <div class="mesh" aria-hidden="true"></div>
 
         <div class="shell">
-            <a href="{{ route('login') }}" class="brand">
+            <a href="{{ route('home') }}" class="brand" aria-label="Kembali ke beranda BLIS">
                 <img src="/images/bl_logo.png" alt="Budi Luhur Logo">
                 <span>BLIS</span>
             </a>
@@ -288,6 +305,8 @@
                     </svg>
                     Masuk dengan Google
                 </a>
+
+                <a href="{{ route('home') }}" class="home-link">Kembali ke Beranda</a>
             </section>
 
             <p class="footnote">Akses siswa dengan prefix blsma atau blsmk tidak diizinkan.</p>
