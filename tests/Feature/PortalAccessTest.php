@@ -131,6 +131,70 @@ class PortalAccessTest extends TestCase
             ->assertDontSee('Private Other Unit WiFi');
     }
 
+    public function test_authenticated_employee_sees_private_items_for_additional_employee_units(): void
+    {
+        $primaryUnit = Unit::create([
+            'code' => 'TEST_SMA_MULTI',
+            'name' => 'SMA Multi',
+            'campus' => 'Shared Building',
+        ]);
+
+        $additionalUnit = Unit::create([
+            'code' => 'TEST_SMK_MULTI',
+            'name' => 'SMK Multi',
+            'campus' => 'Shared Building',
+        ]);
+
+        $otherUnit = Unit::create([
+            'code' => 'TEST_TK_MULTI',
+            'name' => 'TK Multi',
+            'campus' => 'Other Building',
+        ]);
+
+        $user = $this->createEmployeeUser(
+            'multi-unit-staff@budiluhur.sch.id',
+            UserRole::Staff,
+            $primaryUnit,
+            [$additionalUnit],
+        );
+
+        $additionalUnitWebsite = Website::factory()->create([
+            'name' => 'Private Additional Unit Website',
+            'is_private' => true,
+        ]);
+        $additionalUnitWebsite->units()->attach($additionalUnit);
+
+        $otherUnitWebsite = Website::factory()->create([
+            'name' => 'Private Unreachable Unit Website',
+            'is_private' => true,
+        ]);
+        $otherUnitWebsite->units()->attach($otherUnit);
+
+        $additionalUnitWifi = Wifi::factory()->create([
+            'ssid' => 'Private Additional Unit WiFi',
+            'is_private' => true,
+        ]);
+        $additionalUnitWifi->units()->attach($additionalUnit);
+
+        $otherUnitWifi = Wifi::factory()->create([
+            'ssid' => 'Private Unreachable Unit WiFi',
+            'is_private' => true,
+        ]);
+        $otherUnitWifi->units()->attach($otherUnit);
+
+        $this->actingAs($user)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('Private Additional Unit Website')
+            ->assertDontSee('Private Unreachable Unit Website');
+
+        $this->actingAs($user)
+            ->get(route('wifi.index'))
+            ->assertOk()
+            ->assertSee('Private Additional Unit WiFi')
+            ->assertDontSee('Private Unreachable Unit WiFi');
+    }
+
     public function test_registered_employee_can_login_to_staff_portal_with_google(): void
     {
         $email = 'guru@budiluhur.sch.id';
@@ -278,14 +342,22 @@ class PortalAccessTest extends TestCase
             ->assertOk();
     }
 
-    private function createEmployeeUser(string $email, UserRole $role, ?Unit $unit = null): User
+    /**
+     * @param  array<int, Unit>  $additionalUnits
+     */
+    private function createEmployeeUser(string $email, UserRole $role, ?Unit $unit = null, array $additionalUnits = []): User
     {
-        Employee::create([
+        $employee = Employee::create([
             'nip' => fake()->unique()->numerify('####'),
             'name' => fake()->name(),
             'email' => $email,
             'unit_id' => $unit?->id,
         ]);
+
+        $employee->units()->sync(collect($additionalUnits)
+            ->when($unit !== null, fn ($units) => $units->push($unit))
+            ->pluck('id')
+            ->all());
 
         return User::factory()->create([
             'email' => $email,

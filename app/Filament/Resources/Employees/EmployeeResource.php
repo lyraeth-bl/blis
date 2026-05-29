@@ -75,14 +75,14 @@ class EmployeeResource extends Resource
         return [
             'NIP' => $record->nip ?: '-',
             'Jabatan' => $record->position ?: '-',
-            'Unit' => $record->unitModel?->display_name ?: '-',
+            'Unit' => $record->accessibleUnitsLabel(),
         ];
     }
 
     public static function getGlobalSearchEloquentQuery(): Builder
     {
         return parent::getGlobalSearchEloquentQuery()
-            ->with('unitModel:id,name,campus');
+            ->with(['unitModel:id,name,campus', 'units:id,name,campus']);
     }
 
     public static function getEloquentQuery(): Builder
@@ -94,7 +94,12 @@ class EmployeeResource extends Resource
             return $query;
         }
 
-        return $query->whereIn('unit_id', $user->accessibleUnitIds());
+        $accessibleUnitIds = $user->accessibleUnitIds();
+
+        return $query->where(function (Builder $query) use ($accessibleUnitIds): void {
+            $query->whereIn('unit_id', $accessibleUnitIds)
+                ->orWhereHas('units', fn (Builder $query): Builder => $query->whereKey($accessibleUnitIds));
+        });
     }
 
     public static function getRelations(): array
