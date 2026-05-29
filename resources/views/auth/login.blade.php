@@ -61,6 +61,18 @@
 
         html { background: var(--canvas-soft); }
 
+        @view-transition {
+            navigation: auto;
+        }
+
+        ::view-transition-old(root) {
+            animation: page-out .18s ease both;
+        }
+
+        ::view-transition-new(root) {
+            animation: page-in .32s cubic-bezier(.16, 1, .3, 1) both;
+        }
+
         body {
             min-height: 100vh;
             font-family: 'Geist', Inter, system-ui, -apple-system, sans-serif;
@@ -68,6 +80,54 @@
             background: var(--canvas-soft);
             -webkit-font-smoothing: antialiased;
             transition: background .2s, color .2s;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes page-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes page-out {
+            to {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+        }
+
+        @keyframes mesh-drift {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(-18px, -14px, 0) scale(1.04); }
+        }
+
+        @keyframes status-pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 #00dfd855;
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px #00dfd800;
+                transform: scale(1.08);
+            }
         }
 
         .page {
@@ -93,6 +153,7 @@
             filter: blur(48px);
             pointer-events: none;
             opacity: .65;
+            animation: mesh-drift 12s ease-in-out infinite;
         }
 
         [data-theme="dark"] .mesh { opacity: .38; }
@@ -111,6 +172,8 @@
             margin-bottom: 28px;
             text-decoration: none;
             color: var(--ink);
+            opacity: 0;
+            animation: fade-up .65s cubic-bezier(.16, 1, .3, 1) .08s both;
         }
 
         .brand img {
@@ -131,6 +194,8 @@
             border-radius: 8px;
             box-shadow: var(--shadow-card);
             padding: 28px;
+            opacity: 0;
+            animation: fade-up .72s cubic-bezier(.16, 1, .3, 1) .18s both;
         }
 
         .eyebrow {
@@ -152,6 +217,7 @@
             height: 6px;
             border-radius: 9999px;
             background: linear-gradient(90deg, var(--grad-dev-start), var(--grad-dev-end));
+            animation: status-pulse 2.4s ease-in-out infinite;
         }
 
         h1 {
@@ -188,10 +254,13 @@
             font-size: 15px;
             font-weight: 500;
             cursor: pointer;
-            transition: opacity .15s;
+            transition: opacity .15s, transform .18s ease;
         }
 
-        .google-button:hover { opacity: .86; }
+        .google-button:hover {
+            opacity: .86;
+            transform: translateY(-1px);
+        }
 
         .google-button {
             display: inline-flex;
@@ -221,11 +290,12 @@
             font-size: 13px;
             font-weight: 500;
             text-decoration: none;
-            transition: color .15s;
+            transition: color .15s, transform .18s ease;
         }
 
         .home-link:hover {
             color: var(--ink);
+            transform: translateY(-1px);
         }
 
         .footnote {
@@ -234,6 +304,8 @@
             font-size: 12px;
             line-height: 18px;
             text-align: center;
+            opacity: 0;
+            animation: fade-up .65s cubic-bezier(.16, 1, .3, 1) .3s both;
         }
 
         .theme-toggle {
@@ -249,6 +321,8 @@
             cursor: pointer;
             transition: border-color .15s, color .15s, background .15s;
             margin: 18px auto 0;
+            opacity: 0;
+            animation: fade-up .65s cubic-bezier(.16, 1, .3, 1) .38s both;
         }
 
         .theme-toggle:hover {
@@ -266,6 +340,25 @@
         .theme-toggle .icon-moon { display: block; }
         [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
         [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+
+            .brand,
+            .panel,
+            .footnote,
+            .theme-toggle {
+                opacity: 1;
+                transform: none;
+            }
+        }
 
         @media (max-width: 480px) {
             .panel { padding: 22px; }
